@@ -1,7 +1,7 @@
 # BuildModel3D
 
 This project is about get a mesh of an structure bone like a pelvis or femur in order to get data like a distance on important
-areas for example distance between acetabulus and head femur in order to diagnostic an ill for example ostearthritis. the input
+areas for example distance between acetabulus and head femur in order to diagnostic an ill named ostearthritis. the input
 is a x-ray image from a patient and a mesh template with help us to adapt this template in the coords of the x-ray image.
 So we will have a new mesh specific for the patient. (That's so cool).
 
