@@ -1,0 +1,100 @@
+std::vector<int> myvector;
+    // Traverse all of the edges
+    std::cout<<"NUmcells: "<<datosGrilla->GetNumberOfCells();
+
+    std::cout << "There are " << datosGrilla->GetNumberOfLines() << " lines." << std::endl;
+
+      datosGrilla->GetLines()->InitTraversal();
+      vtkSmartPointer<vtkIdList> idList = vtkSmartPointer<vtkIdList>::New();
+      while(datosGrilla->GetLines()->GetNextCell(idList)){
+          std::cout << "Line has " << idList->GetNumberOfIds() << " points." << std::endl;
+
+          for(vtkIdType pointId = 0; pointId < idList->GetNumberOfIds(); pointId++)
+            {
+            std::cout << idList->GetId(pointId) << " ";
+            }
+          std::cout << std::endl;
+          }
+
+    /*for(vtkIdType i = 0; i < datosGrilla->GetNumberOfCells(); i++)
+    {
+
+        vtkSmartPointer<vtkLine> line = vtkLine::SafeDownCast(datosGrilla->GetCell(i));
+        std::cout << "Line " << i << " : " << *line << std::endl;
+
+        double p0[3],p1[0];
+        line->GetPoints()->GetPoint(0,p0);
+        line->GetPoints()->GetPoint(1,p1);
+
+        // Find the squared distance between the points.
+        double squaredDistance = vtkMath::Distance2BetweenPoints(p0, p1);
+
+        // Take the square root to get the Euclidean distance between the points.
+        double distance = sqrt(squaredDistance);
+
+        //std::cout << "square: " << squaredDistance << std::endl;
+        std::cout << "distance: " << distance << std::endl;
+
+        if(distance > 6.0){
+            myvector.push_back(i);
+        }
+
+    }*/
+
+    /*for (unsigned i=0; i<myvector.size(); i++){
+        polydata->BuildLinks(); //importante funcion
+        // Mark a cell as deleted.
+        polydata->DeleteCell(myvector.at(i));
+        // Remove the marked cell.
+        polydata->RemoveDeletedCells();
+    }*/
+
+    /*for(vtkIdType i = 0; i < datosGrilla->GetNumberOfPoints(); i++)
+    {
+        double p[3];
+           datosGrilla->GetPoint(i,p);
+           // This is identical to:
+           // polydata->GetPoints()->GetPoint(i,p);
+           std::cout << "Point " << i << " : (" << p[0] << " " << p[1] << " " << p[2] << ")" << std::endl;
+    }*/
+
+
+
+    // Get a print of the window
+    vtkSmartPointer<vtkWindowToImageFilter> windowToImageFilter = vtkSmartPointer<vtkWindowToImageFilter>::New();
+    windowToImageFilter->SetInput(this->ui->qvtkWidget->GetRenderWindow());
+    windowToImageFilter->SetMagnification(2); //calidad de la imagen
+    windowToImageFilter->Update();
+
+    // Filtro de contorno
+    vtkSmartPointer<vtkContourFilter> ContFilter = vtkSmartPointer<vtkContourFilter>::New();
+    ContFilter->SetInputConnection(windowToImageFilter->GetOutputPort());
+    ContFilter->SetValue(0,255);
+    ContFilter->Update();
+
+    //Datos de contorno
+    vtkSmartPointer<vtkPolyData> contour = ContFilter->GetOutput();
+
+    //dataMalla->setBoundsCont(&contour);
+    //dataMalla->setCenterCont(&contour);
+    //contour = dataMalla->setAlignEscala(&contour);
+    //contour = dataMalla->setAlignPosicion(&contour);
+
+    //Visualizando
+    // Create a mapper and actor of the silhouette
+    vtkSmartPointer<vtkPolyDataMapper> mapper_contour = vtkSmartPointer<vtkPolyDataMapper>::New();
+#if VTK_MAJOR_VERSION <= 5
+    mapper_contour->SetInput(contour);
+#else
+    mapper_contour->SetInputData(contour);
+#endif
+
+    vtkSmartPointer<vtkActor> actor_contour = vtkSmartPointer<vtkActor>::New();
+    actor_contour->SetMapper(mapper_contour);
+    actor_contour->GetProperty()->SetLineWidth(2.);
+
+    vtkSmartPointer<vtkRenderer> renderer2 = vtkSmartPointer<vtkRenderer>::New();
+    renderer2->AddActor(actor_contour);
+
+    // VTK/Qt wedded
+    this->ui->qvtkWidgetDelaunay->GetRenderWindow()->AddRenderer(renderer2);

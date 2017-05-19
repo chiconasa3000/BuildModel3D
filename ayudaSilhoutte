@@ -1,0 +1,60 @@
+/*MatrixXd mallaProy = gp->getMallaProy3d();
+    vtkSmartPointer<vtkPolyData> polydata =  vtkSmartPointer<vtkPolyData>::New();
+    polydata = dataMalla->convMatrix2PolyData(mallaProy);*/
+
+    vtkSmartPointer<vtkPolyData> polydata;
+    polydata = dataMalla->getPolyData();
+    dataMalla->build_mesh_grid(2,2,2);
+
+    vtkSmartPointer<vtkCleanPolyData> clean = vtkSmartPointer<vtkCleanPolyData>::New();
+    clean->SetInputData(polydata);
+    clean->Update();
+
+    polydata = clean->GetOutput();
+
+    // Visualize
+    vtkSmartPointer<vtkPolyDataMapper> meshMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+#if VTK_MAJOR_VERSION <= 5
+    meshMapper->SetInputConnection(polydata->GetProducerPort());
+#else
+    meshMapper->SetInputData(polydata);
+#endif
+
+    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+    actor->SetMapper(meshMapper);
+    actor->GetProperty()->SetInterpolationToFlat();
+    //meshActor->GetProperty()->SetRepresentationToWireframe();
+
+    vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
+    renderer->AddActor(actor);
+
+
+    //Compute the silhouette
+    vtkSmartPointer<vtkPolyDataSilhouette> silhouette =  vtkSmartPointer<vtkPolyDataSilhouette>::New();
+    #if VTK_MAJOR_VERSION <= 5
+      silhouette->SetInput(polydata);
+    #else
+      silhouette->SetInputData(polydata);
+    #endif
+      silhouette->SetCamera(renderer->GetActiveCamera());
+      silhouette->SetEnableFeatureAngle(0);
+
+      for(vtkIdType i = 0; i < silhouette->GetOutput()->GetNumberOfCells(); i++)
+      {
+          std::cout <<*silhouette->GetOutput()->GetCell(i) << std::endl;
+      }
+
+      //create mapper and actor for silouette
+      vtkSmartPointer<vtkPolyDataMapper> mapper2 =  vtkSmartPointer<vtkPolyDataMapper>::New();
+      mapper2->SetInputConnection(silhouette->GetOutputPort());
+
+      vtkSmartPointer<vtkActor> actor2 = vtkSmartPointer<vtkActor>::New();
+      actor2->SetMapper(mapper2);
+      actor2->GetProperty()->SetColor(1.0, 0.3882, 0.2784); // tomato
+      actor2->GetProperty()->SetLineWidth(5);
+      renderer->AddActor(actor2);
+      //renderer->SetBackground(.1, .2, .3);
+      renderer->ResetCamera();
+
+    // VTK/Qt wedded
+    this->ui->qvtkWidgetSilueta->GetRenderWindow()->AddRenderer(renderer);

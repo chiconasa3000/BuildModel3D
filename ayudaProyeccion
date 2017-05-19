@@ -1,0 +1,57 @@
+MatrixXd res(numPuntos,3);
+
+    VectorXd vnormal(3),centro(3);
+    centro << 30, 30, 30;
+
+    /*for(int i =0; i<numPuntos; i++){
+        res.row(i) << finalMalla.row(i) + centro.transpose();
+    }*/
+
+    MatrixXd factorlambda(numPuntos,1);
+
+
+    for(int i =0; i<numPuntos; i++){
+        factorlambda.row(i) << (dMallaOrig(i,2) - centro(2))/(finalMalla(i,2));
+    }
+
+    //std::cout<<"FactorLambda: "<<factorlambda<<endl;
+
+    int factor = 5;
+
+    for(int i =0; i<numPuntos; i++){
+        //res.row(i) << factorlambda.row(i)*finalMalla.row(i) + centro.transpose();
+        res.row(i) << factorlambda.row(i)*finalMalla.row(i) + centro.transpose();
+    }
+
+    //MatrixXd miniCubo(32,3);
+    MatrixXd miniCubo(4096,3);
+
+    int iteMiniCubo = 0;
+
+    double scale = 40;
+
+    for (int ite = 0; ite < 16; ite++){
+
+        for(int iteRes = ite; iteRes < numPuntos; iteRes+=16){
+            miniCubo.row(iteMiniCubo) << res.row(iteRes);
+            iteMiniCubo+=1;
+        }
+        //scale-=1;
+    }
+
+    //miniCubo.block(0,0,16,3) << res.block(0,0,16,3);
+    //miniCubo.block(16,0,16,3) << res.block(16,0,16,3);
+
+    //std::cout<<miniCubo<<endl;
+
+    MatrixXd modCubo(512,3);
+
+    modCubo.block(0,0,256,3) << miniCubo.block(0,0,256,3)*1.1;
+    modCubo.block(256,0,128,3) << miniCubo.block(256,0,128,3);
+
+    MatrixXd matScale = MatrixXd::Ones(2,2);
+    matScale(0,0)  = 4;
+    matScale(1,1) = 3;
+
+    //std::cout<<"MatScale: "<<matScale.inverse()<<endl;
+    //std::cout<<modCubo<<endl;

@@ -1,0 +1,132 @@
+ MatrixXd mallaProy = gp->getMallaProy3d();
+    vtkSmartPointer<vtkPolyData> polydata =  vtkSmartPointer<vtkPolyData>::New();
+    polydata = dataMalla->convMatrix2PolyData(mallaProy);
+
+    // Triangulate the grid points
+    vtkSmartPointer<vtkDelaunay2D> delaunay = vtkSmartPointer<vtkDelaunay2D>::New();
+    delaunay->SetAlpha(0.8);
+
+
+#if VTK_MAJOR_VERSION <= 5
+    delaunay->SetInput(polydata);
+    //delaunay->SetSource(boundary);
+#else
+    delaunay->SetInputData(polydata);
+    //delaunay->SetSourceData(boundary);
+#endif
+    delaunay->Update();
+
+    vtkSmartPointer<vtkPolyData> datosGrilla =  vtkSmartPointer<vtkPolyData>::New();
+    datosGrilla->ShallowCopy(delaunay->GetOutput());
+
+    //mapa que almacenara las aristas por la informacion de sus puntos
+    //clave : suma de sus puntos value : vector de puntos
+
+    std::unordered_map<int,double**> edgesofGridTriangles;
+
+    //Imprimiendo valores
+    for(vtkIdType i = 0; i < datosGrilla->GetNumberOfCells(); i++)
+    {
+        vtkCell* cell = datosGrilla->GetCell(i);
+
+        if(cell->IsA("vtkTriangle")){
+            vtkTriangle* triangle = dynamic_cast<vtkTriangle*>(cell);
+
+            //std::cout << "The cell has " << triangle->GetNumberOfEdges() << " edges." << std::endl;
+
+            for(vtkIdType i = 0; i < triangle->GetNumberOfEdges(); i++)
+            {
+                //Obviamente siempre tendra 3 aristas
+                vtkCell* edge = triangle->GetEdge(i);
+
+                vtkIdList* pointIdList = edge->GetPointIds();
+                //std::cout << "Edge " << i << " has " << pointIdList->GetNumberOfIds()<< " points."  << std::endl;
+
+                double **puntosEdge = new double*[2];
+                int *puntosEdgeID = new int[2];
+                puntosEdge[0] = new double[3];
+                puntosEdge[1] = new double[3];
+                //double *puntoA = new double[3];
+                //double *puntoB = new double[3];
+                for(vtkIdType p = 0; p < pointIdList->GetNumberOfIds(); p++)
+                {                    
+                    edge->GetPoints()->GetPoint(p, puntosEdge[p]);
+                    puntosEdgeID[p] = pointIdList->GetId(p);
+                    //std::cout << "Edge " << i << " uses point " << pointIdList->GetId(p)<< std::endl;
+                }
+
+                //lista ordenada de puntos
+                puntosEdgeID[0] = std::min(puntosEdgeID[0],puntosEdgeID[1]);
+                puntosEdgeID[1] = std::max(puntosEdgeID[0],puntosEdgeID[1]);
+
+                //colocaremos la suma de los indices de los puntos de la arista
+                int suma = puntosEdgeID[0] + puntosEdgeID[1];
+                std::pair<int,double**> tmpEdge (suma,puntosEdge);
+
+                std::unordered_map<int,double**>::iterator it;
+                it = edgesofGridTriangles.find(suma);
+                if (it != edgesofGridTriangles.end()){
+                    //en caso de encontrar alguna artista igual
+                    //eliminamos la q ya se encuentra en el mapa y no lo insertamos
+                    edgesofGridTriangles.erase (it);
+                }else
+                    //en cualquier otro caso solo insertamos la nueva arista
+                    edgesofGridTriangles.insert(tmpEdge);
+            }
+        }
+
+    }
+
+    //colocando ahora en un polydata
+    vtkSmartPointer<vtkPoints> points =  vtkSmartPointer<vtkPoints>::New();
+
+    for ( auto it = edgesofGridTriangles.begin(); it != edgesofGridTriangles.end(); ++it ){
+        //Recorriendo arista
+         points->InsertNextPoint (it->second[0][0], it->second[0][1], it->second[0][2]);
+    }
+
+    vtkSmartPointer<vtkPolyData> pointsPolydata =    vtkSmartPointer<vtkPolyData>::New();
+    pointsPolydata->SetPoints(points);
+
+    // Visualize
+    vtkSmartPointer<vtkVertexGlyphFilter> vertexFilter = vtkSmartPointer<vtkVertexGlyphFilter>::New();
+#if VTK_MAJOR_VERSION <= 5
+    vertexFilter->SetInputConnection(pointsPolydata->GetProducerPort());
+#else
+    vertexFilter->SetInputData(pointsPolydata);
+#endif
+    vertexFilter->Update();
+
+    vtkSmartPointer<vtkPolyData> polydataCont = vtkSmartPointer<vtkPolyData>::New();
+    polydataCont->ShallowCopy(vertexFilter->GetOutput());
+
+    vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+#if VTK_MAJOR_VERSION <= 5
+    mapper->SetInputConnection(polydataCont->GetProducerPort());
+#else
+    mapper->SetInputData(polydataCont);
+#endif
+
+    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+    actor->SetMapper(mapper);
+    actor->GetProperty()->SetPointSize(5);
+
+    // Visualize
+    vtkSmartPointer<vtkPolyDataMapper> meshMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+#if VTK_MAJOR_VERSION <= 5
+    meshMapper->SetInputConnection(datosGrilla->GetProducerPort());
+#else
+    meshMapper->SetInputData(datosGrilla);
+#endif
+
+    vtkSmartPointer<vtkActor> meshActor = vtkSmartPointer<vtkActor>::New();
+    meshActor->SetMapper(meshMapper);
+    meshActor->GetProperty()->SetRepresentationToWireframe();
+
+    vtkSmartPointer<vtkRenderer> renderer =
+            vtkSmartPointer<vtkRenderer>::New();
+    renderer->AddActor(meshActor);
+    renderer->AddActor(actor);
+
+    // VTK/Qt wedded
+    this->ui->qvtkWidgetDelaunay->GetRenderWindow()->AddRenderer(renderer);

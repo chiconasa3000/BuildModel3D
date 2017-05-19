@@ -1,0 +1,361 @@
+MatrixXd mallaProy = gp->getMallaProy3d();
+    vtkSmartPointer<vtkPolyData> polydata =  vtkSmartPointer<vtkPolyData>::New();
+    polydata = dataMalla->convMatrix2PolyData(mallaProy);
+
+    // Triangulate the grid points
+    vtkSmartPointer<vtkDelaunay2D> delaunay = vtkSmartPointer<vtkDelaunay2D>::New();
+    delaunay->SetAlpha(0.8);
+
+    dataMalla->ordenarContornos();
+
+#if VTK_MAJOR_VERSION <= 5
+    delaunay->SetInput(polydata);
+    //delaunay->SetSource(boundary);
+#else
+    delaunay->SetInputData(polydata);
+    //delaunay->SetSourceData(boundary);
+#endif
+    delaunay->Update();
+
+    vtkPolyData* input = delaunay->GetOutput();
+
+    // Visualize
+    vtkSmartPointer<vtkPolyDataMapper> meshMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    #if VTK_MAJOR_VERSION <= 5
+      meshMapper->SetInputConnection(datosGrilla->GetProducerPort());
+    #else
+      meshMapper->SetInputData(input);
+    #endif
+
+    vtkSmartPointer<vtkActor> meshActor = vtkSmartPointer<vtkActor>::New();
+    meshActor->SetMapper(meshMapper);
+    meshActor->GetProperty()->SetColor(0,1,0); //green
+    meshActor->GetProperty()->SetRepresentationToWireframe();
+
+    vtkSmartPointer<vtkRenderer> renderer =
+            vtkSmartPointer<vtkRenderer>::New();
+
+
+    vtkSmartPointer<vtkRenderWindow> renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
+    //renderWindow->AddRenderer(renderer);
+
+    // VTK/Qt wedded
+    //this->ui->qvtkWidgetSilueta->GetRenderWindow()->AddRenderer(renderer);
+    renderWindow->AddRenderer(renderer);
+
+    vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
+      renderWindowInteractor->SetRenderWindow(renderWindow);
+      renderWindowInteractor->Initialize();
+
+      // Set the custom stype to use for interaction.
+      vtkSmartPointer<MouseInteractorStyle> style = vtkSmartPointer<MouseInteractorStyle>::New();
+      style->SetDefaultRenderer(renderer);
+      style->Data = delaunay->GetOutput();
+
+      renderWindowInteractor->SetInteractorStyle(style);
+
+      renderer->AddActor(meshActor);
+      renderer->ResetCamera();
+
+      renderer->SetBackground(0,0,1); // Blue
+
+      renderWindow->Render();
+      renderWindowInteractor->Start();
+
+    /*conseguir separar el interactor con la ventana principal*/
+    //conseguir la parte del interactor
+    //conseguir la parte de la ventana principal
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+
+ /*vtkSmartPointer<vtkIdFilter> idFilter = vtkSmartPointer<vtkIdFilter>::New();
+    idFilter->SetInputConnection(delaunay->GetOutputPort());
+    idFilter->SetIdsArrayName("OriginalIds"); //la clase buscara el array que contenga dicho nombre
+    idFilter->Update();
+
+    vtkSmartPointer<vtkDataSetSurfaceFilter> surfaceFilter = vtkSmartPointer<vtkDataSetSurfaceFilter>::New();
+    surfaceFilter->SetInputConnection(idFilter->GetOutputPort());
+    surfaceFilter->Update();
+
+    vtkPolyData* input = surfaceFilter->GetOutput();
+
+    // Visualize
+    vtkSmartPointer<vtkPolyDataMapper> meshMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    #if VTK_MAJOR_VERSION <= 5
+      meshMapper->SetInputConnection(datosGrilla->GetProducerPort());
+    #else
+      meshMapper->SetInputData(input);
+    #endif
+      meshMapper->ScalarVisibilityOff();
+
+    vtkSmartPointer<vtkActor> meshActor = vtkSmartPointer<vtkActor>::New();
+    meshActor->SetMapper(meshMapper);
+    meshActor->GetProperty()->SetRepresentationToWireframe();
+
+    vtkSmartPointer<vtkRenderer> renderer =
+            vtkSmartPointer<vtkRenderer>::New();
+    renderer->AddActor(meshActor);
+
+    vtkSmartPointer<vtkRenderWindow> renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
+    //renderWindow->AddRenderer(renderer);
+
+    // VTK/Qt wedded
+    //this->ui->qvtkWidgetSilueta->GetRenderWindow()->AddRenderer(renderer);
+    renderWindow->AddRenderer(renderer);
+
+    vtkSmartPointer<vtkAreaPicker> areaPicker = vtkSmartPointer<vtkAreaPicker>::New();
+    vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
+    renderWindowInteractor->SetPicker(areaPicker);
+    renderWindowInteractor->SetRenderWindow(renderWindow);
+
+    //conexion con la clase InteractorStyle
+    vtkSmartPointer<InteractorStyle> style = vtkSmartPointer<InteractorStyle>::New();
+    style->SetPoints(input);
+
+    renderWindowInteractor->SetInteractorStyle( style );
+    renderWindowInteractor->Start();*/
+
+
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+delaunay 2 para interaccion con el mouse
+////////////////////////////////////////
+
+//////////////////////
+
+
+void Create3DBones::ejec_delaunay_2(){
+    std::unordered_map<int,int> idesEdge;
+    MatrixXd mallaProy = gp->getMallaProy3d();
+    vtkSmartPointer<vtkPolyData> polydata =  vtkSmartPointer<vtkPolyData>::New();
+    polydata = dataMalla->convMatrix2PolyData(mallaProy);
+
+    // Triangulate the grid points
+    vtkSmartPointer<vtkDelaunay2D> delaunay = vtkSmartPointer<vtkDelaunay2D>::New();
+    delaunay->SetAlpha(0.8);
+
+    dataMalla->ordenarContornos();
+
+#if VTK_MAJOR_VERSION <= 5
+    delaunay->SetInput(polydata);
+    //delaunay->SetSource(boundary);
+#else
+    delaunay->SetInputData(polydata);
+    //delaunay->SetSourceData(boundary);
+#endif
+    delaunay->Update();
+
+ vtkSmartPointer<vtkPolyData> datosGrilla =  vtkSmartPointer<vtkPolyData>::New();
+    datosGrilla->ShallowCopy(delaunay->GetOutput());
+
+    // Create a sphere
+    /*vtkSmartPointer<vtkSphereSource> sphereSource =
+      vtkSmartPointer<vtkSphereSource>::New();
+    sphereSource->Update();
+
+    vtkSmartPointer<vtkTriangleFilter> triangleFilter =
+      vtkSmartPointer<vtkTriangleFilter>::New();
+    triangleFilter->SetInputConnection(sphereSource->GetOutputPort());
+    triangleFilter->Update();*/
+
+
+    vtkIdType cellIde = 0;
+
+    for(cellIde = 0; cellIde < datosGrilla->GetNumberOfCells(); ++cellIde)
+    {
+
+      //std::cout << "Celda " << cellIde <<std::endl;
+
+      vtkSmartPointer<vtkIdList> cellPointIds =
+        vtkSmartPointer<vtkIdList>::New();
+      //cellId = cellIde-1;
+      //tomara el id de la ultima celda
+      datosGrilla->GetCellPoints(cellIde, cellPointIds);
+
+
+      std::list<vtkIdType> neighbors;
+
+      for(vtkIdType i = 0; i < cellPointIds->GetNumberOfIds(); i++)
+      {
+        vtkSmartPointer<vtkIdList> idList =
+          vtkSmartPointer<vtkIdList>::New();
+
+        //add one of the edge points
+        idList->InsertNextId(cellPointIds->GetId(i));
+
+        //add the other edge point
+        if(i+1 == cellPointIds->GetNumberOfIds())
+        {
+          idList->InsertNextId(cellPointIds->GetId(0));
+        }
+        else
+        {
+          idList->InsertNextId(cellPointIds->GetId(i+1));
+        }
+
+        //get the neighbors of the cell
+        vtkSmartPointer<vtkIdList> neighborCellIds =
+          vtkSmartPointer<vtkIdList>::New();
+
+        datosGrilla->GetCellNeighbors(cellIde, idList, neighborCellIds);
+
+        for(vtkIdType j = 0; j < neighborCellIds->GetNumberOfIds(); j++)
+        {
+          neighbors.push_back(neighborCellIds->GetId(j));
+        }
+
+      }
+
+      //std::cout << "ides de las aristas vecinas son: " << std::endl;
+
+
+      for(std::list<vtkIdType>::iterator it1 = neighbors.begin(); it1 != neighbors.end(); it1++)
+      {
+        //Debemos insertar los ides de los vecinos en una tabla hash
+        //para que poder identificar los ides que hayan sido identicos
+
+        std::unordered_map<int,int>::iterator it;
+        //ver si el actual id ya existe
+        it = idesEdge.find(*it1);
+
+        if (it != idesEdge.end()){
+          //en caso de encontrar alguna artista igual
+          //eliminamos la q ya se encuentra en el mapa y no lo insertamos
+          //std::cout << "Se elimino" << it->second << std::endl;
+          idesEdge.erase (it);
+        }else{
+          std::pair<int,int> item (*it1,*it1);
+          //en cualquier otro caso solo insertamos la nueva arista
+          idesEdge.insert(item);
+        }
+        //std::cout << " " << *it1;
+      }
+      //std::cout << std::endl;
+    }
+
+
+  //LIsta de los puntos con el id de la celdas que quedaron
+      vtkSmartPointer<vtkIdList> remaincellPointIds =
+        vtkSmartPointer<vtkIdList>::New();
+
+    //listas para insertar los puntos
+         vtkSmartPointer<vtkPoints> points =
+      vtkSmartPointer<vtkPoints>::New();
+
+      double *puntosEdge = new double[3];
+
+
+    //Ahora recorremos la tabla actual
+    for ( auto it = idesEdge.begin(); it != idesEdge.end(); ++it ){
+      //Conseguimos la arista
+
+
+      std::cout<<"valor en mapa: "<<(it->second)<<std::endl;
+
+       datosGrilla->GetCellPoints(it->second, remaincellPointIds);
+       //Recorremos los ids de los puntos de las celdas del mapa
+       for(vtkIdType i = 0; i < remaincellPointIds->GetNumberOfIds(); i++){
+        datosGrilla->GetPoint(remaincellPointIds->GetId(i),puntosEdge);
+          std::cout<<"IdePunto: "<<remaincellPointIds->GetId(i)<<endl;
+          points->InsertNextPoint (puntosEdge[0], puntosEdge[1], puntosEdge[2]);
+       }
+
+       std::cout<<"HolaPUnto: "<<puntosEdge[0]<<endl;
+       std::cout<<"HolaPUnto: "<<puntosEdge[1]<<endl;
+       std::cout<<"HolaPUnto: "<<puntosEdge[2]<<endl;
+
+
+       std:cout<<endl;
+
+
+      /*vtkCell* edge = datosGrilla->GetEdge(it->second);
+
+
+      //ides de los puntos de la arista
+      vtkIdList* pointIdList = edge->GetPointIds();
+      std::cout << "Arista " << it->second << " tiene " << pointIdList->GetNumberOfIds() << " puntos."  << std::endl;
+
+      for(vtkIdType p = 0; p < pointIdList->GetNumberOfIds(); p++)
+      {
+        std::cout << "Arista " << it->selectionNode << " usa los puntos " << pointIdList->GetId(p) << std::endl;
+      }*/
+
+    }
+    std::cout<<"Tamanio del mapa: "<<idesEdge.size()<<std::endl;
+
+  //llenando los puntos a un polydata
+    vtkSmartPointer<vtkPolyData> pointsPolydata =
+      vtkSmartPointer<vtkPolyData>::New();
+
+    pointsPolydata->SetPoints(points);
+
+    //vtkSmartPointer<vtkPolyData> pointsPolydata =
+     // vtkSmartPointer<vtkPolyData>::New();
+
+   // pointsPolydata->SetPoints(mypoints);
+
+    vtkSmartPointer<vtkVertexGlyphFilter> vertexFilter =
+      vtkSmartPointer<vtkVertexGlyphFilter>::New();
+  #if VTK_MAJOR_VERSION <= 5
+    vertexFilter->SetInputConnection(pointsPolydata->GetProducerPort());
+  #else
+    vertexFilter->SetInputData(pointsPolydata);
+  #endif
+    vertexFilter->Update();
+
+    // Visualization
+    vtkSmartPointer<vtkPolyDataMapper> mapper =
+      vtkSmartPointer<vtkPolyDataMapper>::New();
+  #if VTK_MAJOR_VERSION <= 5
+    mapper->SetInputConnection(vertexFilter->GetProducerPort());
+  #else
+    mapper->SetInputData(delaunay->GetOutput());
+  #endif
+
+    vtkSmartPointer<vtkActor> actor =
+      vtkSmartPointer<vtkActor>::New();
+    actor->SetMapper(mapper);
+    actor->GetProperty()->SetRepresentationToWireframe();
+    actor->GetProperty()->SetPointSize(5);
+
+    vtkSmartPointer<vtkRenderer> renderer =
+      vtkSmartPointer<vtkRenderer>::New();
+    vtkSmartPointer<vtkRenderWindow> renderWindow =
+      vtkSmartPointer<vtkRenderWindow>::New();
+    renderWindow->AddRenderer(renderer);
+
+    /*vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor =
+      vtkSmartPointer<vtkRenderWindowInteractor>::New();
+    renderWindowInteractor->SetRenderWindow(renderWindow);*/
+
+    renderer->AddActor(actor);
+
+    //renderWindow->Render();
+    //renderWindowInteractor->Start();
+
+    vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor =
+      vtkSmartPointer<vtkRenderWindowInteractor>::New();
+    renderWindowInteractor->SetRenderWindow(renderWindow);
+
+    vtkSmartPointer<MouseInteractorStyle> style = vtkSmartPointer<MouseInteractorStyle>::New();
+      style->SetDefaultRenderer(renderer);
+      style->Data = pointsPolydata;
+
+      renderWindowInteractor->SetInteractorStyle(style);
+
+
+    renderWindowInteractor->Start();
+     //this->ui->qvtkWidgetDelaunay->GetRenderWindow()->AddRenderer(renderer);
+
+
+
+}
