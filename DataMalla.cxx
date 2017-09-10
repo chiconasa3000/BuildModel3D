@@ -12,6 +12,8 @@ void DataMalla::buildDataMallaWithPolyData(vtkSmartPointer<vtkPolyData> *polyd){
     {
         double p[3];
         polyd->Get()->GetPoint(i,p);
+        //cada punto obtenido tiene un id unico que sera el i
+        //este sera la cuarta columna
         VectorXd v(3);
         v << p[0], p[1], p[2];
         matrix.row(i) = v;
@@ -23,6 +25,7 @@ MatrixXd& DataMalla::getMatrizDataMalla(){
 }
 
 vtkSmartPointer<vtkPolyData> DataMalla::convMatrix2PolyData(MatrixXd & nuevaMalla){
+    //en el polydata solo extraemos las coordenadas mas no el identificador del punto
     vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
     vtkSmartPointer<vtkPolyData> pointsPolydata = vtkSmartPointer<vtkPolyData>::New();
 
@@ -37,6 +40,9 @@ vtkSmartPointer<vtkPolyData> DataMalla::convMatrix2PolyData(MatrixXd & nuevaMall
 }
 
 MatrixXd DataMalla::convPolyData2Matrix(vtkSmartPointer<vtkPolyData> * polyd){
+
+    //Peligro!!! no se puede recuperar el identificador del punto
+
     MatrixXd matrixFromPolyData(polyd->Get()->GetNumberOfPoints(),3);
     for(vtkIdType i = 0; i < polyd->Get()->GetNumberOfPoints(); i++)
     {
@@ -54,6 +60,19 @@ void DataMalla::printDataMalla(){
     std::cout<<"Imprimiendo Matriz de "
     <<"["<< matrix.rows()<<","<< matrix.cols()<<"]\n";
     std::cout<<matrix<<"\n";
+}
+
+void DataMalla::saveInFile(std::string nameFile){
+    ofstream myfile;
+    myfile.open (nameFile);
+
+    for(int i=0; i<matrix.rows(); i++){
+        for(int j=0; j<matrix.cols(); j++){
+            myfile<< matrix(i,j) <<"\t";
+        }
+        myfile<<endl;
+    }
+    myfile.close();
 }
 
 void DataMalla::setBoundsData(vtkSmartPointer<vtkPolyData> *data3d){
@@ -165,15 +184,6 @@ std::unordered_map<double*,double**> & DataMalla::getMapEdges(){
 }
 
 
-void DataMalla::ordenarContornos(){
-    //std::cout<<"Tamano: "<<  mapEdgesContornoMalla->size();
-    /*std::unordered_map<double*,double*>::iterator ite = mapEdgesContornoMalla->end();
-    std::advance( ite, 1 );*/
-    //Iteramos hasta al penultimo elemento del mapa
-    /*for ( auto it = mapEdgesContornoMalla->begin(); it != mapEdgesContornoMalla->end(); ++it ){
-        std::cout << "Punto1: " << it->second[0] << "Punto2" << it->second[1]<< std::endl;
-    }*/
-}
 /*std::unordered_map<double*,double*>  DataMalla::getMapEdges(){
     return mapEdgesContornoMalla;
 }*/
@@ -203,7 +213,7 @@ vtkSmartPointer<vtkPolyData> DataMalla::build_mesh_grid(double s1,double s2,doub
     std::list<double> pctrlZ = calcPtosControl(saltoz,minz - saltoz,maxz + saltoz);
 
     vtkSmartPointer<vtkPoints> points =  vtkSmartPointer<vtkPoints>::New();
-    vtkSmartPointer<vtkPolyData> meshgridControl =  vtkSmartPointer<vtkPolyData>::New();
+    meshgridControl =  vtkSmartPointer<vtkPolyData>::New();
 
     for (std::list<double>::iterator itx=pctrlX.begin(); itx != pctrlX.end(); ++itx){
         for (std::list<double>::iterator ity=pctrlY.begin(); ity != pctrlY.end(); ++ity){
@@ -215,6 +225,10 @@ vtkSmartPointer<vtkPolyData> DataMalla::build_mesh_grid(double s1,double s2,doub
 
     meshgridControl->SetPoints(points);
 
+    return meshgridControl;
+}
+
+vtkSmartPointer<vtkPolyData> DataMalla::getMeshGridControl(){
     return meshgridControl;
 }
 

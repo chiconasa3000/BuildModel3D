@@ -67,6 +67,9 @@
 #include <unordered_map>
 #include <list>
 #include <string>
+#include <algorithm>
+#include <vector>
+#include <fstream>
 
 // For compatibility with new VTK generic data arrays
 #ifdef vtkGenericDataArray_h
@@ -145,11 +148,12 @@ Create3DBones::Create3DBones()
     connect(this->ui->actionExit, SIGNAL(triggered()), this, SLOT(slotExit()));
     connect(this->ui->but_find_cont,  SIGNAL(clicked()), this, SLOT(findContornoOnImage()));
     connect(this->ui->but_load_image,  SIGNAL(clicked()), this, SLOT(load_image()));
-    connect(this->ui->but_exe_pers,  SIGNAL(clicked()), this, SLOT(ejec_proyeccion()));
-    connect(this->ui->but_load_model,  SIGNAL(clicked()), this, SLOT(load_model_grid()));
     connect(this->ui->but_load_meanmd,  SIGNAL(clicked()), this, SLOT(load_model()));
-    connect(this->ui->but_delaunay,  SIGNAL(clicked()), this, SLOT(reproyeccion()));
+    connect(this->ui->but_load_model,  SIGNAL(clicked()), this, SLOT(load_model_grid()));
+    connect(this->ui->but_exe_pers,  SIGNAL(clicked()), this, SLOT(ejec_proyeccion()));
     connect(this->ui->but_silueta, SIGNAL(clicked()), this, SLOT(ejec_proyeccionGrid()));
+    connect(this->ui->but_delaunay,  SIGNAL(clicked()), this, SLOT(reproyeccion()));
+
 
 
 }
@@ -165,110 +169,71 @@ void Create3DBones::load_image(){
 
 //REPROYECCION DE GRILLA Y CONTORNO a 3D
 void Create3DBones::reproyeccion(){
-    //Reproyeccion del Cubo
-    grp1 = new GestorPerspectiva();
-    MatrixXd matrixGridCubo = gp1->getMallaProy3d();
-    MatrixXd cuboRep = grp1->reproyeccion(matrixGridCubo);
-    //std::cout << "BackProyeccion de Puntos \n" << cuboRep << std::endl;
-    vtkSmartPointer<vtkPolyData> dataCubo3D =  vtkSmartPointer<vtkPolyData>::New();
-    dataCubo3D = gridPtosCtrl->convMatrix2PolyData(cuboRep);
+    //leer la nube de puntos de la cubo proyectado
+    //leer la nube de puntos del modelo proyectado
 
-    grp = new GestorPerspectiva();
-    MatrixXd silhouette = dataMalla->convPolyData2Matrix(&pointsSilhouette);
-    MatrixXd silhouetteRep = grp->reproyeccion(silhouette);
-    vtkSmartPointer<vtkPolyData> dataSilhouette3D =  vtkSmartPointer<vtkPolyData>::New();
-    dataSilhouette3D = gridPtosCtrl->convMatrix2PolyData(silhouetteRep);
-
-    reproyeccionMalla();
-
-    vtkSmartPointer<vtkVertexGlyphFilter> vertexFilter1 = vtkSmartPointer<vtkVertexGlyphFilter>::New();
-#if VTK_MAJOR_VERSION <= 5
-    vertexFilter1->SetInputConnection(dataSilhouette3D->GetProducerPort());
-#else
-    vertexFilter1->SetInputData(dataSilhouette3D);
-#endif
-    vertexFilter1->Update();
-
-    vtkSmartPointer<vtkPolyData> mypolyData1 = vtkSmartPointer<vtkPolyData>::New();
-    mypolyData1->ShallowCopy(vertexFilter1->GetOutput());
-
-    vtkSmartPointer<vtkVertexGlyphFilter> vertexFilter = vtkSmartPointer<vtkVertexGlyphFilter>::New();
-#if VTK_MAJOR_VERSION <= 5
-    vertexFilter->SetInputConnection(dataCubo3D->GetProducerPort());
-#else
-    vertexFilter->SetInputData(dataCubo3D);
-#endif
-    vertexFilter->Update();
-
-    vtkSmartPointer<vtkPolyData> mypolyData = vtkSmartPointer<vtkPolyData>::New();
-    mypolyData->ShallowCopy(vertexFilter->GetOutput());
-
-    //Visualizando
-    vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    mapper->SetInputData(mypolyData);
-
-    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
-    actor->SetMapper(mapper);
-
-    //Visualizando
-    vtkSmartPointer<vtkPolyDataMapper> mapper1 = vtkSmartPointer<vtkPolyDataMapper>::New();
-    mapper1->SetInputData(mypolyData1);
-
-    vtkSmartPointer<vtkActor> actor1 = vtkSmartPointer<vtkActor>::New();
-    actor1->SetMapper(mapper1);
-    actor1->GetProperty()->SetColor(1,0,0);
-    actor1->GetProperty()->SetPointSize(4);
-
-
-    vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
-    renderer->AddActor(actor);
-    renderer->AddActor(actor1);
-
-    // VTK/Qt wedded
-    this->ui->qvtkWidgetDelaunay->GetRenderWindow()->AddRenderer(renderer);
+    /********************************************/
+    Delaunay miDelaunay;
+    //convertir a un vector la nube de puntos
+    miDelaunay.nubeMatrix2nubeVect();
+    //ordenando la nube de puntos
+    miDelaunay.ordenarNubePtos();
+    //mostrando la nueba nube de puntos
+    miDelaunay.printNubeVect();
+    cout<<endl;
+    //diviendo la nube en grupos
+    miDelaunay.dividirNubePtos();
+    //reproyeccionMalla();
 }
 
 //REPROYECCION SOLO DE CONTORNO DE PLANTILLA A 3D
 void Create3DBones::reproyeccionMalla(){
 
-    MatrixXd silhouette = dataMalla->convPolyData2Matrix(&pointsSilhouette);
-    MatrixXd silhouetteRep = grp->reproyeccion(silhouette);
-    vtkSmartPointer<vtkPolyData> dataSilhouette3D =  vtkSmartPointer<vtkPolyData>::New();
-    dataSilhouette3D = gridPtosCtrl->convMatrix2PolyData(silhouetteRep);
+    //MatrixXd silhouette = dataMalla->convPolyData2Matrix(&pointsSilhouette);
+    //Delaunay miDelaunay(silhoutte);
 
-    vtkSmartPointer<vtkVertexGlyphFilter> vertexFilter1 = vtkSmartPointer<vtkVertexGlyphFilter>::New();
-#if VTK_MAJOR_VERSION <= 5
-    vertexFilter1->SetInputConnection(dataSilhouette3D->GetProducerPort());
-#else
-    vertexFilter1->SetInputData(dataSilhouette3D);
-#endif
-    vertexFilter1->Update();
+    //cout<<silhouette;
+    //gp->recalcularZ3d(silhouette);
 
-    vtkSmartPointer<vtkPolyData> mypolyData1 = vtkSmartPointer<vtkPolyData>::New();
-    mypolyData1->ShallowCopy(vertexFilter1->GetOutput());
+//    MatrixXd newCoordZ3d = gp->getCoordZ3dr();
+//    MatrixXd silhouetteRep = gp->reproyeccion(silhouette,newCoordZ3d);
+//    vtkSmartPointer<vtkPolyData> dataSilhouette3D =  vtkSmartPointer<vtkPolyData>::New();
+//    dataSilhouette3D = gridPtosCtrl->convMatrix2PolyData(silhouetteRep);
 
-    //Visualizando
-    vtkSmartPointer<vtkPolyDataMapper> mapper1 = vtkSmartPointer<vtkPolyDataMapper>::New();
-    mapper1->SetInputData(mypolyData1);
+//    vtkSmartPointer<vtkVertexGlyphFilter> vertexFilter1 = vtkSmartPointer<vtkVertexGlyphFilter>::New();
+//#if VTK_MAJOR_VERSION <= 5
+//    vertexFilter1->SetInputConnection(dataSilhouette3D->GetProducerPort());
+//#else
+//    vertexFilter1->SetInputData(dataSilhouette3D);
+//#endif
+//    vertexFilter1->Update();
 
-    vtkSmartPointer<vtkActor> actor1 = vtkSmartPointer<vtkActor>::New();
-    actor1->SetMapper(mapper1);
-    actor1->GetProperty()->SetColor(1,0,0);
-    actor1->GetProperty()->SetPointSize(4);
+//    vtkSmartPointer<vtkPolyData> mypolyData1 = vtkSmartPointer<vtkPolyData>::New();
+//    mypolyData1->ShallowCopy(vertexFilter1->GetOutput());
+
+//    //Visualizando
+//    vtkSmartPointer<vtkPolyDataMapper> mapper1 = vtkSmartPointer<vtkPolyDataMapper>::New();
+//    mapper1->SetInputData(mypolyData1);
+
+//    vtkSmartPointer<vtkActor> actor1 = vtkSmartPointer<vtkActor>::New();
+//    actor1->SetMapper(mapper1);
+//    actor1->GetProperty()->SetColor(1,0,0);
+//    actor1->GetProperty()->SetPointSize(4);
 
 
-    vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
-    renderer->AddActor(actor1);
+//    vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
+//    renderer->AddActor(actor1);
 
-    // VTK/Qt wedded
-    this->ui->qvtkWidgetSilueta->GetRenderWindow()->AddRenderer(renderer);
+//    // VTK/Qt wedded
+//    this->ui->qvtkWidgetSilueta->GetRenderWindow()->AddRenderer(renderer);
 
 }
 
 //PROYECCION DE CUBO Y CONTORNO DE PLANTILLA a 2D
 void Create3DBones::ejec_proyeccionGrid(){
     vtkSmartPointer<vtkPolyData> ptosCtrl =  vtkSmartPointer<vtkPolyData>::New();
-    ptosCtrl = dataMalla->build_mesh_grid(15,15,15);
+    ptosCtrl = dataMalla->getMeshGridControl();
+
     gridPtosCtrl = new DataMalla(ptosCtrl->GetNumberOfPoints(),3);
     gridPtosCtrl->buildDataMallaWithPolyData(&ptosCtrl);
     gridPtosCtrl->setPolyData(ptosCtrl);
@@ -278,14 +243,22 @@ void Create3DBones::ejec_proyeccionGrid(){
     //Iniciando puntos de perspectiva
 
     gp1 = new GestorPerspectiva();
-    gp1->setDataMalla(gridPtosCtrl->getMatrizDataMalla());
-    //gp->setVectTrasRot(perspecData->getVtraslacion(),perspecData->getVrotacion());
+
+    MatrixXd temp = gridPtosCtrl->getMatrizDataMalla();
+    //MatrixXd temp2 = temp.block(0,0, temp.rows(),3);
+
+    gp1->setDataMalla(temp);
+    VectorXd vtrasl(3); vtrasl <<0,0,50;
+    VectorXd vRot(3); vRot << 0,0,0;
+    gp1->setVectTrasRot(vtrasl,vRot);
+    gp1->aplicarBasicTranf();
+
     gp1->inicioModelo();
-    //gp1->printCoordModel();
+
 
     MatrixXd mallaProy = gp1->getMallaProy3d();
-    MatrixXd vectUnos = MatrixXd::Ones(mallaProy.rows(),1)*5;
-    mallaProy.col(2) << vectUnos;
+//    MatrixXd vectUnos = MatrixXd::Ones(mallaProy.rows(),1)*5;
+//    mallaProy.col(2) << vectUnos;
 
 
     vtkSmartPointer<vtkPolyData> polydata =  vtkSmartPointer<vtkPolyData>::New();
@@ -343,13 +316,22 @@ void Create3DBones::ejec_proyeccionGrid(){
 
 //EJECUCION DE PROYECCION SOLO DE MALLA a 2D
 void Create3DBones::ejec_proyeccion(){
-
     //Iniciando puntos de perspectiva
-    gp = new GestorPerspectiva();
-    gp->setDataMalla(dataMalla->getMatrizDataMalla());
-    //gp->setVectTrasRot(perspecData->getVtraslacion(),perspecData->getVrotacion());
-    gp->inicioModelo();
 
+    MatrixXd temp = dataMalla->getMatrizDataMalla();
+    MatrixXd temp2 = temp.block(0,0, temp.rows(),3);
+
+    gp = new GestorPerspectiva();
+    gp->setDataMalla(temp2);
+    VectorXd vtrasl(3); vtrasl <<0,0,50;
+    VectorXd vRot(3); vRot << 0,0,0;
+    gp->setVectTrasRot(vtrasl,vRot);
+    gp->aplicarBasicTranf();
+
+    //dataMalla->saveInFile("ptosMalla.txt");
+
+    gp->inicioModelo();
+    //gp->printCoordModel();
     MatrixXd mallaProy = gp->getMallaProy3d();
 
     //MatrixXd vectUnos = MatrixXd::Ones(mallaProy.rows(),1)*5;
@@ -487,8 +469,8 @@ int Create3DBones::calcFactorDecimal(int idPoint){
 
 //DETECCION DE CONTORNO DE PLANTILLA MEDIANTE DELAUNAY
 vtkSmartPointer<vtkPolyData> Create3DBones::ejec_delaunay(){
-
     MatrixXd mallaProy = gp->getMallaProy3d();
+    //cout<<mallaProy;
 
     /*MatrixXd vectUnos = MatrixXd::Ones(mallaProy.rows(),1)*5;
     mallaProy.col(2) << vectUnos;*/
@@ -498,9 +480,9 @@ vtkSmartPointer<vtkPolyData> Create3DBones::ejec_delaunay(){
 
     // Triangulate the grid points
     vtkSmartPointer<vtkDelaunay2D> delaunay = vtkSmartPointer<vtkDelaunay2D>::New();
-    delaunay->SetAlpha(8);
+    delaunay->SetAlpha(5);
 
-    dataMalla->ordenarContornos();
+    //dataMalla->ordenarContornos();
 
 #if VTK_MAJOR_VERSION <= 5
     delaunay->SetInput(polydata);
@@ -519,6 +501,10 @@ vtkSmartPointer<vtkPolyData> Create3DBones::ejec_delaunay(){
     //clave : suma de sus puntos value : vector de puntos
 
     std::unordered_map<int,double**> mapaAristas;
+
+    //Creando archivo que almacena los puntos de la silueta
+    ofstream myfile;
+    myfile.open ("ptosCont.txt");
 
     //Imprimiendo valores
     for(vtkIdType i = 0; i < datosGrilla->GetNumberOfCells(); i++)
@@ -558,6 +544,8 @@ vtkSmartPointer<vtkPolyData> Create3DBones::ejec_delaunay(){
                 //std::cout<<"AA: "<<puntosEdgeID[0]<<endl;
                 //std::cout<<"BB: "<<puntosEdgeID[1]<<endl;
 
+                //formando id de arista a partir de ids de sus ptos
+                //posibles ids de arista
                 int AnewIdEdge = puntosEdgeID[0]*calcFactorDecimal(puntosEdgeID[0]) + puntosEdgeID[1];
                 int BnewIdEdge = puntosEdgeID[1]*calcFactorDecimal(puntosEdgeID[1]) + puntosEdgeID[0];
 
@@ -588,30 +576,27 @@ vtkSmartPointer<vtkPolyData> Create3DBones::ejec_delaunay(){
                     //std::cout<<"insert: "<<std::get<0>(tmpEdge)<<endl;
                     mapaAristas.insert(tmpEdge);
                 }
-
-
             }
         }
-
     }
 
     //colocando ahora en un polydata
     vtkSmartPointer<vtkPoints> points =  vtkSmartPointer<vtkPoints>::New();
 
     //Imprimir el tamaño del mapa
-    std::cout<<"Nro de Aristas en el mapa: "<<mapaAristas.size()<<endl;
+    //std::cout<<"Nro de Aristas en el mapa: "<<mapaAristas.size()<<endl;
 
-    vtkSmartPointer<vtkExtractEdges> extractEdges =
-        vtkSmartPointer<vtkExtractEdges>::New();
-      extractEdges->SetInputConnection(delaunay->GetOutputPort());
-      extractEdges->Update();
+    vtkSmartPointer<vtkExtractEdges> extractEdges = vtkSmartPointer<vtkExtractEdges>::New();
+    extractEdges->SetInputConnection(delaunay->GetOutputPort());
+    extractEdges->Update();
 
     vtkCellArray* lines= extractEdges->GetOutput()->GetLines();
-    std::cout << "There are " << lines->GetNumberOfCells() << " aristas en total." << std::endl;
+    //std::cout << "There are " << lines->GetNumberOfCells() << " aristas en total." << std::endl;
 
     for ( auto it = mapaAristas.begin(); it != mapaAristas.end(); ++it ){
         //Recorriendo arista
         points->InsertNextPoint (it->second[0][0], it->second[0][1], it->second[0][2]);
+        myfile << it->second[0][0] << "\t"<< it->second[0][1] << std::endl;
         //std::cout<<it->second[0][0]<<" "<<it->second[0][1]<<" "<<it->second[0][2]<<std::endl;
     }
 
@@ -630,9 +615,11 @@ vtkSmartPointer<vtkPolyData> Create3DBones::ejec_delaunay(){
     pointsSilhouette = vtkSmartPointer<vtkPolyData>::New();
     pointsSilhouette->ShallowCopy(vertexFilter->GetOutput());
 
+    //cerrando el archivo de puntos de contorno
+    myfile.close();
+
     return pointsSilhouette;
 }
-
 
 //Interactor del estilo del mouse
 vtkStandardNewMacro(MouseInteractorStyle);
@@ -652,7 +639,9 @@ void Create3DBones::cargarModelo(std::string filename, std::string filetype){
         readerObj->SetFileName(filename.c_str());
         readerObj->Update();
         polydata->ShallowCopy(readerObj->GetOutput());
+
     }else if(filetype.compare("vtk")==0){
+
         readerVtk->SetFileName(filename.c_str());
         readerVtk->Update();
         polydata->ShallowCopy(readerVtk->GetOutput());
@@ -667,9 +656,9 @@ void Create3DBones::cargarModelo(std::string filename, std::string filetype){
     dataMalla->setCenterData(&polydata);
 
 
+
     //Visualizando
-    vtkSmartPointer<vtkPolyDataMapper> mapper =
-            vtkSmartPointer<vtkPolyDataMapper>::New();
+    vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
 
     if(filetype.compare("obj")==0){
         mapper->SetInputConnection(readerObj->GetOutputPort());
@@ -678,12 +667,10 @@ void Create3DBones::cargarModelo(std::string filename, std::string filetype){
     }
 
 
-    vtkSmartPointer<vtkActor> actor =
-            vtkSmartPointer<vtkActor>::New();
+    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
     actor->SetMapper(mapper);
 
-    vtkSmartPointer<vtkRenderer> renderer =
-            vtkSmartPointer<vtkRenderer>::New();
+    vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
     renderer->AddActor(actor);
 
     //Dibujo de ejes
@@ -694,7 +681,6 @@ void Create3DBones::cargarModelo(std::string filename, std::string filetype){
     renderer->AddActor(axes);
     // VTK/Qt wedded
     this->ui->qvtkWidget_2->GetRenderWindow()->AddRenderer(renderer);
-
 }
 
 
@@ -712,8 +698,7 @@ void Create3DBones::cargarFileVTK(std::string filename)
    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
    actor->SetMapper(mapper);
 
-   vtkSmartPointer<vtkRenderer> renderer =
-           vtkSmartPointer<vtkRenderer>::New();
+   vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
    renderer->AddActor(actor);
 
    // VTK/Qt wedded
@@ -873,7 +858,8 @@ void Create3DBones::adjustScrollBar(QScrollBar *scrollBar, double factor)
 }
 
 void Create3DBones::findContornoOnImage(){
-    typedef itk::Image<double, 2>  DoubleImageType;
+
+    /*typedef itk::Image<double, 2>  DoubleImageType;
 
     std::cout << "AplicarCanny: "<< getRutaImagen().c_str() <<std::endl;
     typedef itk::ImageFileReader<DoubleImageType> ReaderType;
@@ -885,7 +871,7 @@ void Create3DBones::findContornoOnImage(){
     //a menos que construyas la salida del filtro canny como imagen
     QuickView viewer;
     viewer.AddImage<DoubleImageType>(reader->GetOutput());
-    viewer.Visualize();
+    viewer.Visualize();*/
 }
 
 void Create3DBones::setRutaImagen(QString filename){

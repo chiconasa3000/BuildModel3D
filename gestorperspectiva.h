@@ -19,9 +19,9 @@ class GestorPerspectiva
     MatrixXd matRotGen;
     MatrixXd matTrans;
     MatrixXd matProy;
-    MatrixXd mallaProy3d;
+    MatrixXd mallaProy2d;
     MatrixXd coordsZ3d;
-    MatrixXd coordsZ2d;
+    MatrixXd coordsZ3dr;
     int numPuntos;
 
 public:
@@ -35,8 +35,12 @@ public:
     void calcMatRotGen();
     void calcMatTransformacion();
     void calcMatProyeccion();
+    void aplicarBasicTranf();
+    void recalcularZ3d(MatrixXd &silueta);
+    MatrixXd getCoordZ3d();
+    MatrixXd getCoordZ3dr();
     MatrixXd getMallaProy3d();
-    MatrixXd reproyeccion(MatrixXd &dMalla);
+    MatrixXd reproyeccion(MatrixXd &dMalla,MatrixXd &z3d);
 };
 
 #endif // GESTORPERSPECTIVA_H

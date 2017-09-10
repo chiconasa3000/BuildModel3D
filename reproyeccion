@@ -1,0 +1,63 @@
+//REPROYECCION DE GRILLA Y CONTORNO a 3D
+void Create3DBones::reproyeccion(){
+    //Reproyeccion del Cubo
+    MatrixXd matrixGridCubo = gp1->getMallaProy3d();
+    MatrixXd cuboRep = gp1->reproyeccion(matrixGridCubo);
+    std::cout << "BackProyeccion de Puntos \n" << matrixGridCubo << std::endl;
+    vtkSmartPointer<vtkPolyData> dataCubo3D =  vtkSmartPointer<vtkPolyData>::New();
+    dataCubo3D = gridPtosCtrl->convMatrix2PolyData(cuboRep);
+
+    //grp = new GestorPerspectiva();
+//    MatrixXd silhouette = dataMalla->convPolyData2Matrix(&pointsSilhouette);
+//    MatrixXd silhouetteRep = gp->reproyeccion(silhouette);
+//    vtkSmartPointer<vtkPolyData> dataSilhouette3D =  vtkSmartPointer<vtkPolyData>::New();
+//    dataSilhouette3D = gridPtosCtrl->convMatrix2PolyData(silhouetteRep);
+
+    //reproyeccionMalla();
+
+//    vtkSmartPointer<vtkVertexGlyphFilter> vertexFilter1 = vtkSmartPointer<vtkVertexGlyphFilter>::New();
+//#if VTK_MAJOR_VERSION <= 5
+//    vertexFilter1->SetInputConnection(dataSilhouette3D->GetProducerPort());
+//#else
+//    vertexFilter1->SetInputData(dataSilhouette3D);
+//#endif
+//    vertexFilter1->Update();
+
+//    vtkSmartPointer<vtkPolyData> mypolyData1 = vtkSmartPointer<vtkPolyData>::New();
+//    mypolyData1->ShallowCopy(vertexFilter1->GetOutput());
+
+    vtkSmartPointer<vtkVertexGlyphFilter> vertexFilter = vtkSmartPointer<vtkVertexGlyphFilter>::New();
+#if VTK_MAJOR_VERSION <= 5
+    vertexFilter->SetInputConnection(dataCubo3D->GetProducerPort());
+#else
+    vertexFilter->SetInputData(dataCubo3D);
+#endif
+    vertexFilter->Update();
+
+    vtkSmartPointer<vtkPolyData> mypolyData = vtkSmartPointer<vtkPolyData>::New();
+    mypolyData->ShallowCopy(vertexFilter->GetOutput());
+
+    //Visualizando
+    vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    mapper->SetInputData(mypolyData);
+
+    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+    actor->SetMapper(mapper);
+
+//    //Visualizando
+//    vtkSmartPointer<vtkPolyDataMapper> mapper1 = vtkSmartPointer<vtkPolyDataMapper>::New();
+//    mapper1->SetInputData(mypolyData1);
+
+//    vtkSmartPointer<vtkActor> actor1 = vtkSmartPointer<vtkActor>::New();
+//    actor1->SetMapper(mapper1);
+//    actor1->GetProperty()->SetColor(1,0,0);
+//    actor1->GetProperty()->SetPointSize(4);
+
+
+    vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
+    renderer->AddActor(actor);
+    //renderer->AddActor(actor1);
+
+    // VTK/Qt wedded
+    this->ui->qvtkWidgetDelaunay->GetRenderWindow()->AddRenderer(renderer);
+}

@@ -1,0 +1,36 @@
+ //cargar de una matriz de puntos del modelo
+    MatrixXd nubePuntos(10,2);
+    //cloudPoints = [0 0; 2 2; 2 -2; 2 4; 4 0; 6 4; 8.5 2; 10 -2; 10 0; 10 4];
+    nubePuntos << 2,2,0,0,2,-2,2,4,4,0,6,4,10,-2,8.5,2,10,0,10,4;
+    //cout<<"NubePuntos:"<<nubePuntos<<endl;
+
+    std::vector<vector<double>> nubePtos;
+
+
+    //std::vector<double> v3(nubePuntos.data(), nubePuntos.data()+nubePuntos.cols()*nubePuntos.rows());
+
+    //necesitamos convertir la matriz en un vector
+    for(int i=0; i<nubePuntos.rows();i++){
+        std::vector<double> myvector;
+        for(int j=0; j<2; j++){
+            VectorXd ptoActual = nubePuntos.row(i);
+            double nro = ptoActual(j);
+            myvector.push_back(nro);
+        }
+        nubePtos.push_back(myvector);
+    }
+
+    //ordenando por la coordenada x
+    //for(int i=0;i<nubePtos.size();i++)
+        //std::sort(nubePtos[i].begin(),nubePtos[i].end());
+    std::sort(nubePtos.begin(), nubePtos.end(), myobject);
+
+    for(int i=0; i<nubePtos.size();i++){
+        //std::vector<double> vectPto;
+        for(int j=0; j<nubePtos[i].size(); j++){
+            cout<<nubePtos[i][j]<<" ";
+        }
+        cout<<endl;
+    }
+
+    //implementando la funcion de recursividad

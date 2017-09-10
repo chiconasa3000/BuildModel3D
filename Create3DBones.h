@@ -5,7 +5,8 @@
 #include <QMainWindow>
 #include <string>
 #include "DataMalla.h"
-#include "perspecdata.h"
+#include "delaunay.h"
+//#include "perspecdata.h"
 #include "gestorperspectiva.h"
 
 // Forward Qt class declarations
@@ -62,7 +63,7 @@ private:
   //Variables de Proyeccion Geometrica
   DataMalla *dataMalla;
   DataMalla *gridPtosCtrl;
-  PerspecData *perspecData;
+  //PerspecData *perspecData;
   GestorPerspectiva *gp;
   GestorPerspectiva *gp1;
   GestorPerspectiva *grp;

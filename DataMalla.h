@@ -4,6 +4,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <list>
+#include <fstream>
 #include <eigen3/Eigen/Dense>
 #include <vtk-7.1/vtkSmartPointer.h>
 #include <vtk-7.1/vtkPolyData.h>
@@ -16,6 +17,7 @@ using Eigen::VectorXd;
 class DataMalla{
 private:
     MatrixXd matrix;
+    vtkSmartPointer<vtkPolyData> meshgridControl;
     double bounds_data[6];
     double center_data[3];
     double bounds_contour[6];
@@ -30,6 +32,7 @@ public:
     ~DataMalla();
     void buildDataMallaWithPolyData(vtkSmartPointer<vtkPolyData> *polyd);
     MatrixXd& getMatrizDataMalla();
+    vtkSmartPointer<vtkPolyData> getMeshGridControl();
     vtkSmartPointer<vtkPolyData> convMatrix2PolyData(MatrixXd & nuevoMalla);
     MatrixXd convPolyData2Matrix(vtkSmartPointer<vtkPolyData> * polyd);
     void setBoundsData(vtkSmartPointer<vtkPolyData> *data3d);
@@ -41,11 +44,12 @@ public:
     vtkSmartPointer<vtkPolyData> setAlignEscala(vtkSmartPointer<vtkPolyData> *polydata);
     vtkSmartPointer<vtkPolyData> setAlignPosicion(vtkSmartPointer<vtkPolyData> *polydata);
     void printDataMalla();
+    void saveInFile(std::string filename);
     void setPolyData(vtkSmartPointer<vtkPolyData> mypolyd);
     vtkSmartPointer<vtkPolyData> getPolyData();
     void setMapEdges(std::unordered_map<double*,double**> &mapEdgesContornoMalla);
     std::unordered_map<double*,double**> & getMapEdges();
-    void ordenarContornos();
+
     vtkSmartPointer<vtkPolyData> build_mesh_grid(double s1,double s2,double s3);
     std::list<double> calcPtosControl(double salto,double xa,double xb);
 

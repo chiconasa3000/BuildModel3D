@@ -30,7 +30,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab_3">
        <attribute name="title">
@@ -96,23 +96,23 @@
           <widget class="QWidget" name="layoutWidget">
            <layout class="QHBoxLayout" name="horizontalLayout_2">
             <item>
-             <widget class="QPushButton" name="but_exe_pers">
+             <widget class="QPushButton" name="but_load_model">
               <property name="text">
-               <string>Proyeccion de Nube de Puntos</string>
+               <string>Malla y Cubo 3D</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="but_load_model">
+             <widget class="QPushButton" name="but_exe_pers">
               <property name="text">
-               <string>Grid &amp; Model</string>
+               <string>Proyeccion de Malla</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QPushButton" name="but_silueta">
               <property name="text">
-               <string>Cubo Ptos Control</string>
+               <string>Proyeccion Malla y Cubo</string>
               </property>
              </widget>
             </item>
