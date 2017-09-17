@@ -7,6 +7,11 @@ if(UNIX)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=gnu++0x")
 endif()
 
+#Archivos DELAUNAY_UTIL
+set(D_DIR "/home/cris/ExtraPrograms/QtProjects/Example/Example/DelaunayUtil")
+set(DELAUNAY_CPP ${D_DIR}/arista.cpp ${D_DIR}/grafo.cpp ${D_DIR}/subgrafo.cpp ${D_DIR}/punto.cpp)
+#set(DELAUNAY_HEAD ${D_DIR}/arista.h ${D_DIR}/grafo.h ${D_DIR}/subgrafo.h ${D_DIR}/.h ${D_DIR}/punto.h)
+include_directories( ${D_DIR} )
 
 #Archivos ITK
 find_package(ITK REQUIRED)
@@ -41,7 +46,7 @@ file(GLOB CXX_FILES *.cxx)
 if(${VTK_VERSION} VERSION_GREATER "6")
   qt4_wrap_ui(UISrcs ${UI_FILES} )
   # CMAKE_AUTOMOC in ON so the MOC headers will be automatically wrapped.
-  add_executable(Create3DBones MACOSX_BUNDLE  ${CXX_FILES} ${UISrcs} ${QT_WRAP} ${OBJ_FILES})
+  add_executable(Create3DBones MACOSX_BUNDLE  ${DELAUNAY_CPP} ${CXX_FILES} ${UISrcs} ${QT_WRAP} ${OBJ_FILES})
   qt4_use_modules(Create3DBones Core Gui)
   target_link_libraries(Create3DBones ${VTK_LIBRARIES} ${ITK_LIBRARIES})
 endif()

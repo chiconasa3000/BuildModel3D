@@ -2,7 +2,7 @@
 
 // This is included here because it is forward declared in
 // Create3DBones.h
-#include "ui_Create3DBones.h"
+
 #include <unordered_map>
 #include <QFileDialog>
 #include <QMessageBox>
@@ -86,10 +86,10 @@
 
 #include "QuickView.h"
 
-#include "interactorstyle.h"
-#include "mouseinteractorstyle.h"
+//#include "interactorstyle.h"
+//#include "mouseinteractorstyle.h"
 
-vtkStandardNewMacro(InteractorStyle);
+//vtkStandardNewMacro(InteractorStyle);
 
 vtkSmartPointer<vtkPolyData> pointsSilhouette;
 
@@ -158,6 +158,10 @@ Create3DBones::Create3DBones()
 
 }
 
+vtkSmartPointer<vtkRenderWindow> Create3DBones::getRenderWindow(QVTKWidget *w){
+    return w->GetRenderWindow();
+}
+
 void Create3DBones::slotExit()
 {
     qApp->exit();
@@ -179,10 +183,17 @@ void Create3DBones::reproyeccion(){
     //ordenando la nube de puntos
     miDelaunay.ordenarNubePtos();
     //mostrando la nueba nube de puntos
-    miDelaunay.printNubeVect();
-    cout<<endl;
+    //miDelaunay.printNubeVect();
     //diviendo la nube en grupos
     miDelaunay.dividirNubePtos();
+    miDelaunay.estructurarInGrafo();
+
+    Grafo *grafDelaunay = miDelaunay.getGrafoDelaunay();
+    //grafDelaunay->printDataGrafo();
+    grafDelaunay->doTriangBase();
+    //grafDelaunay->printAristasGrafo();
+    //grafDelaunay->testGrafo();
+    grafDelaunay->drawGrafo(getRenderWindow(this->ui->qvtkWidgetDelaunay));
     //reproyeccionMalla();
 }
 
@@ -622,7 +633,7 @@ vtkSmartPointer<vtkPolyData> Create3DBones::ejec_delaunay(){
 }
 
 //Interactor del estilo del mouse
-vtkStandardNewMacro(MouseInteractorStyle);
+//vtkStandardNewMacro(MouseInteractorStyle);
 
 //CARGAR EL MODELO O PLANTILLA PARA VISUALIZACION formato (VTK,OBJ)
 void Create3DBones::cargarModelo(std::string filename, std::string filetype){

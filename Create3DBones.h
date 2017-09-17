@@ -6,9 +6,11 @@
 #include <string>
 #include "DataMalla.h"
 #include "delaunay.h"
+#include "DelaunayUtil/arista.h"
+#include "QuickView.h"
 //#include "perspecdata.h"
 #include "gestorperspectiva.h"
-
+#include "ui_Create3DBones.h"
 // Forward Qt class declarations
 QT_BEGIN_NAMESPACE
 class Ui_Create3DBones;
@@ -34,6 +36,7 @@ public:
   int calcFactorDecimal(int numCifras);
   vtkSmartPointer<vtkPolyData> ejec_delaunay();
   void reproyeccionMalla();
+  vtkSmartPointer<vtkRenderWindow> getRenderWindow(QVTKWidget *w);
   std::string getRutaImagen();
   QMenu *fileMenu;
   QMenu *viewMenu;

@@ -52,7 +52,7 @@ void Delaunay::dividirNubePtos(){
     //comienza con el nro de puntos
     //le daremos como base la lista de nro de puntos vector
     dividirRecNubePtos(nroPuntos,nubePtos);
-    printGroupBig();
+    //printGroupBig();
 
 }
 
@@ -78,7 +78,10 @@ void Delaunay::dividirRecNubePtos(int divisor,vector<vector<double>> groupTiny){
 }
 
 
-
+void Delaunay::estructurarInGrafo(){
+    //construyendo el grafo a partir del vector ya recolectado "groupBig"
+    grafoDelaunay = new Grafo(groupBig);
+}
 
 /************************ Funciones Adicionales **************************/
 
@@ -130,4 +133,9 @@ vector<vector<double>> Delaunay::getNubeVector(){
 //devuelve en estructura matriz la nube de puntos
 MatrixXd Delaunay::getNubeMatrix(){
     return nubePuntos;
+}
+
+//Pasa el grafo para q pueda ser manejado externamente
+Grafo * Delaunay::getGrafoDelaunay(){
+    return grafoDelaunay;
 }

@@ -4,6 +4,7 @@
 #include <eigen3/Eigen/Dense>
 #include <vector>
 #include <iostream>
+#include "DelaunayUtil/grafo.h"
 
 using namespace std;
 using Eigen::MatrixXd;
@@ -15,6 +16,7 @@ private:
     MatrixXd nubePuntos;
     vector<vector<double>> nubePtos;
     vector<vector<vector<double>>> groupBig;
+    Grafo *grafoDelaunay;
     int nroPuntos;
 public:
     //constructor con puntos ya definidos
@@ -25,6 +27,8 @@ public:
     void ordenarNubePtos();
     void dividirNubePtos();
     void dividirRecNubePtos(int divisor,vector<vector<double>>);
+    void estructurarInGrafo();
+    Grafo * getGrafoDelaunay();
 
     long getNroPuntosNube();
     vector<vector<double>> getNubeVector();
