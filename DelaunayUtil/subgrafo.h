@@ -23,7 +23,7 @@
 #include <vtk-7.1/vtkRenderWindow.h>
 #include <vtk-7.1/vtkRenderer.h>
 #include <vtk-7.1/vtkRenderWindowInteractor.h>
-
+#include "utilmaths.h"
 
 class SubGrafo
 {
@@ -32,11 +32,23 @@ public:
     SubGrafo(vector<vector<double>> listapuntos);
     void insertPunto(Punto &p);
     void doConnectionPoints();
+
+    //conseguir los candidadtos del actual subgrafo
+    void saveCandidates(Arista lineaBase, Punto base);
+    //ordenar aristas candidatas
+    void orderAristCand(vector<double> angulosAristas);
+
+    //conseguir el menor punto de la lista de puntos del subgrafo
+    void calcMenorPointInYcoord();
+    Punto getMenorPtoy();
+
     void printSubgrafo();
     void printAristaSubGra();
     void drawSubgrafo(vtkMutableUndirectedGraph *g,vtkPoints *points);
     void createIdsPuntosSubgrafo(vtkSmartPointer<vtkMutableUndirectedGraph> g);
     void printIdes();
+    vector<Punto> getGroupPuntos();
+    vector<Arista> getListArisCand();
 //    bool doFirstCond();
 //    void anguloEnAristas(int idAristaA, int idAristaB);
 //    bool doSecondCond();
@@ -50,6 +62,12 @@ public:
 //    int getCommonPointEnAristas(int idAristaA, int idAristaB);
 private:
       vector<Punto> group_puntos;
+      //advertencia cambiando a referencia para que esta pueda cambiarse
+      vector<Arista> listArisCand;
+
+      //menor punto en coordenada y
+      Punto minPtoy;
+
 //    Arista lineaBase;
 };
 

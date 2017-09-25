@@ -18,10 +18,11 @@ public:
     Punto(const Punto &punto);
     void copiar(const Punto &p);
     Punto& operator=(const Punto &rhs);
-    void getLessPoint(std::list<int> idPuntos);
+    Punto* operator=(const Punto *rhs);
     void insertArista(Arista a);
     double getX();
     double getY();
+    vector<Arista>* getGroupAristas();
     void printPoint();
     void printAristas();
     vtkIdType getIdVert();

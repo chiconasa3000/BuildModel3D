@@ -94,7 +94,7 @@
 vtkSmartPointer<vtkPolyData> pointsSilhouette;
 
 // Constructor
-Create3DBones::Create3DBones() 
+Create3DBones::Create3DBones()
 {
     this->ui = new Ui_Create3DBones;
     this->ui->setupUi(this);
@@ -194,6 +194,8 @@ void Create3DBones::reproyeccion(){
     //grafDelaunay->printAristasGrafo();
     //grafDelaunay->testGrafo();
     grafDelaunay->drawGrafo(getRenderWindow(this->ui->qvtkWidgetDelaunay));
+
+    grafDelaunay->mergeGrafo();
     //reproyeccionMalla();
 }
 

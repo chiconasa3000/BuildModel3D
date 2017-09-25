@@ -16,6 +16,13 @@ void Punto::copiar(const Punto &p){
     coor_x = p.coor_x;
     coor_y = p.coor_y;
     idVert = p.idVert;
+    //copia del grupo de aristas
+
+    //adevertencia: solo estamos cambiando la referencia
+    //esto seria que ambos apuntan al mismo grupo de aristas
+    group_aristas = p.group_aristas;
+    //group_aristas.(p.group_aristas.begin(), p.group_aristas.end());
+    //group_aristas = new vector<Arista>(p.group_aristas->begin(), p.group_aristas->end() );
 }
 
 Punto& Punto::operator=(const Punto &rhs) {
@@ -30,6 +37,20 @@ Punto& Punto::operator=(const Punto &rhs) {
 
     return *this;
 }
+
+Punto* Punto::operator=(const Punto *rhs) {
+
+    //si son diferentes
+    if (this != rhs) {
+        this->coor_x = NULL;
+        this->coor_y = NULL;
+        this->idVert = 0;
+        copiar(*rhs);
+    }
+
+    return this;
+}
+
 
 Punto::Punto(const Punto &p){
     coor_x = NULL;
@@ -95,4 +116,8 @@ void Punto::createIdPunto(vtkSmartPointer<vtkMutableUndirectedGraph> g){
 
 vtkIdType Punto::getIdVert(){
     return idVert;
+}
+
+vector<Arista>* Punto::getGroupAristas(){
+    return &group_aristas;
 }

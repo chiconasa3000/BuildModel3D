@@ -16,6 +16,13 @@ public:
     Grafo(vector<vector<vector<double>>> listaSubgrafos);
     void doTriangBase();
     vtkSmartPointer<vtkGraphToPolyData> getGrafoPolydata();
+
+    //unir los subgrafos
+    void mergeGrafo();
+    //establecer la linea base para un par de subgrafos
+    Arista doLineaBase(SubGrafo *s1,SubGrafo *s2);
+    void saveCandidatos(Arista *lBase,SubGrafo *s1,SubGrafo *s2);
+
     void drawGrafo(vtkSmartPointer<vtkRenderWindow> renderWindow);
     void doRender(vtkSmartPointer<vtkRenderWindow> renderWindow);
     void grafo2PolyData();

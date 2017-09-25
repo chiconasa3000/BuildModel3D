@@ -40,6 +40,60 @@ Grafo::Grafo(vector<vector<vector<double>>> listSubgrafo)
 
 }
 
+
+Arista Grafo::doLineaBase(SubGrafo *s1,SubGrafo *s2){
+    //encontramos los puntos mas bajos de cada subgrafo
+    //los cuales estan al principio de la lista
+    Punto ps1 = s1->getMenorPtoy();
+    Punto ps2 = s2->getMenorPtoy();
+
+    //debemos hacer que esta arista copie todos los datos a la hora de retornar
+    Arista aristaBase(ps1,ps2);
+
+    return aristaBase;
+}
+
+//funcion general del grafo para guardar candidatos de 2 subgrafos
+void Grafo::saveCandidatos(Arista *lbase, SubGrafo *s1,SubGrafo *s2){
+
+    //conseguir los menores puntos en coord y
+    Punto ps1 = s1->getMenorPtoy();
+    Punto ps2 = s2->getMenorPtoy();
+
+    //con el punto menor guardamos los candidatos de aristas de cada subgrafo
+    s1->saveCandidates(*lbase,ps1); //candidatos del subgrafo 1
+    s2->saveCandidates(*lbase,ps2); //candidatos del subgrafo 2
+}
+
+
+
+/*void Grafo::checkSubgrafo(vector<Arista> a, vector<Arista> b, Arista *lineabase){
+
+}*/
+
+void Grafo::mergeGrafo(){
+
+    //recorremos solo 2 subgrafos para poder hacer las pruebas
+    //for(int i=0; i<2; i++){
+
+        SubGrafo *s1 = &group_subgrafos[0];
+        SubGrafo *s2 = &group_subgrafos[1];
+
+        //capturamos el menor punto en y de cada subgrafo
+        s1->calcMenorPointInYcoord();
+        s2->calcMenorPointInYcoord();
+
+        //establecemos la linea base para ambos subgrafos
+        Arista lineaBase = doLineaBase(s1,s2);
+        saveCandidatos(&lineaBase,s1,s2); //guarda los candidatos para ambos subgrafos
+
+        vector<Arista> listCandS1 = s1->getListArisCand();
+        vector<Arista> listCandS2 = s2->getListArisCand();
+
+        //checkSubgrafo(listCandS1,listCandS2,lineaBase);
+    //}
+}
+
 void Grafo::doTriangBase(){
     //debemos formar aristas de los puntos de cada subgrafo
     for(int i=0; i<group_subgrafos.size();i++){
