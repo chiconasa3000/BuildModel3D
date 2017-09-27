@@ -3,8 +3,9 @@
 #include <vector>
 #include "arista.h"
 #include <numeric>
-
-
+#include <eigen3/Eigen/Dense>
+using Eigen::MatrixXd;
+using Eigen::VectorXd;
 using namespace std;
 
 
@@ -16,6 +17,8 @@ public:
     UtilMaths();
     double calcAngulo(Arista *base,Arista *candidata);
     vector<double> calcPendiente(Arista *base);
+    //evaluacion cocircular de 3 puntos (baseI,baseD,candAct) con el candidato siguiente
+    bool testCoCircular(Arista *base,Punto candAct, Punto candNext);
 
 
 };

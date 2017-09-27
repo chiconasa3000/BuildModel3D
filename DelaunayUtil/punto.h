@@ -22,6 +22,8 @@ public:
     void insertArista(Arista a);
     double getX();
     double getY();
+    void setX(double coor_x);
+    void setY(double coor_y);
     vector<Arista>* getGroupAristas();
     void printPoint();
     void printAristas();

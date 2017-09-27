@@ -34,7 +34,7 @@ public:
     void doConnectionPoints();
 
     //conseguir los candidadtos del actual subgrafo
-    void saveCandidates(Arista lineaBase, Punto base);
+    void saveCandidates(Arista * lineaBase, Punto base);
     //ordenar aristas candidatas
     void orderAristCand(vector<double> angulosAristas);
 
@@ -49,26 +49,30 @@ public:
     void printIdes();
     vector<Punto> getGroupPuntos();
     vector<Arista> getListArisCand();
-//    bool doFirstCond();
-//    void anguloEnAristas(int idAristaA, int idAristaB);
-//    bool doSecondCond();
-//    bool pointInCircle();
-//    void completarDelaunay();
-//    //retorna id de aristas(
-//    std::list<int> buscarAristasConPuntoOrigen(int idPunto);
-//    void agregarArista();
-//    void eliminarArista();
-//    //retorna id de punto
-//    int getCommonPointEnAristas(int idAristaA, int idAristaB);
+    //    bool doFirstCond();
+    //    void anguloEnAristas(int idAristaA, int idAristaB);
+    //    bool doSecondCond();
+    //    bool pointInCircle();
+    //    void completarDelaunay();
+    //    //retorna id de aristas(
+    //    std::list<int> buscarAristasConPuntoOrigen(int idPunto);
+    //    void agregarArista();
+    //    void eliminarArista();
+    //    //retorna id de punto
+    //    int getCommonPointEnAristas(int idAristaA, int idAristaB);
 private:
-      vector<Punto> group_puntos;
-      //advertencia cambiando a referencia para que esta pueda cambiarse
-      vector<Arista> listArisCand;
 
-      //menor punto en coordenada y
-      Punto minPtoy;
+    //grupo de puntos del subgrafo
+    vector<Punto> group_puntos;
 
-//    Arista lineaBase;
+    //lista de aristas candidatas del subgrafo
+    vector<Arista> listArisCand;
+
+    //Menor punto en coordenada y
+    Punto minPtoy;
+
+    //Final Candidato
+    Punto finalCandidato;
 };
 
 #endif // SUBGRAFO_H

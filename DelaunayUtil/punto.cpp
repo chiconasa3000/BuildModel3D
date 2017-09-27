@@ -74,9 +74,19 @@ double Punto::getY(){
     return coor_y;
 }
 
+void Punto::setX(double coor_x){
+    this->coor_x = coor_x;
+}
+
+void Punto::setY(double coor_y){
+    this->coor_y = coor_y;
+}
+
+
 //impresion del punto
 void Punto::printPoint(){
-    cout<<coor_x<<" "<<coor_y<<endl;
+    cout<<"Id:"<<idVert<<" -> "<<coor_x<<" "<<coor_y<<endl;
+
 }
 
 //impresion de la lista de aristas de un punto

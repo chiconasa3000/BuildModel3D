@@ -5,6 +5,36 @@ UtilMaths::UtilMaths()
 
 }
 
+bool UtilMaths::testCoCircular(Arista *base,Punto candAct, Punto candNext){
+    Punto ptoOrig = base->getPtoOrigen();
+    Punto ptoDest = base->getPtoDestino();
+
+    //El orden de los puntos no se altera a pesar de que varie el subgrafo elegido
+    double p1 = pow(ptoOrig.getX(),2) + pow(ptoOrig.getY(),2);
+    double q1 = pow(ptoDest.getX(),2) + pow(ptoDest.getY(),2);
+    //Punto candidato
+    double r1 = pow(candAct.getX(),2) + pow(candAct.getY(),2);
+
+    //Siguiente punto candidatos a evaluar
+    double d1 = pow(candNext.getX(),2) + pow(candNext.getY(),2);
+
+    MatrixXd cocircular;
+
+    cocircular.resize(4,4);
+
+    cocircular <<   ptoOrig.getX(), ptoOrig.getY(), p1, 1,
+                    ptoDest.getX(), ptoDest.getY(), q1, 1,
+                    candAct.getX(), candAct.getY(), r1, 1,
+                    candNext.getX(), candNext.getY(), d1, 1;
+
+    if(cocircular.determinant()>0)
+        //FALLO debido a que el next pto candidato se encontro al interior del cocircular
+        return false;
+    else
+        //APROBO debido a que el next pto candidato no se encuentra al interior del cocircular
+        return true;
+}
+
 double UtilMaths::calcAngulo(Arista *base,Arista *candidata){
     //calculo del angulo
     vector<double> a = calcPendiente(base);

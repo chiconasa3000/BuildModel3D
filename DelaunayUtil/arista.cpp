@@ -24,11 +24,18 @@ Arista::Arista(Punto ptoO, Punto ptoD){
     ptoOrigen = new Punto();
     ptoDestino = new Punto();
 
-    ptoOrigen = &ptoO;
-    ptoDestino = &ptoD;
+    //ptoOrigen = &ptoO;
+    ptoOrigen->setX(ptoO.getX());
+    ptoOrigen->setY(ptoO.getY());
+
+    //ptoDestino = &ptoD;
+    ptoDestino->setX(ptoD.getX());
+    ptoDestino->setY(ptoD.getY());
     //solo para inicializar aunque nunca los tendra
     idOrigen = -1;
     idDestino = -1;
+
+    anguloWithLineb = -1;
 }
 
 
@@ -42,6 +49,8 @@ void Arista::copiar(const Arista &a){
 
     ptoOrigen = a.ptoOrigen;
     ptoDestino = a.ptoDestino;
+
+    anguloWithLineb = a.anguloWithLineb;
 }
 
 Arista& Arista::operator=(const Arista &rhs) {
@@ -52,6 +61,7 @@ Arista& Arista::operator=(const Arista &rhs) {
         this->idDestino = -1;
         this->ptoOrigen = NULL;
         this->ptoDestino = NULL;
+        this->anguloWithLineb = -1;
         copiar(rhs);
     }
 
@@ -66,6 +76,7 @@ Arista* Arista::operator=(const Arista *rhs) {
         this->idDestino = -1;
         this->ptoOrigen = NULL;
         this->ptoDestino = NULL;
+        this->anguloWithLineb = -1;
         copiar(*rhs);
     }
 
@@ -112,6 +123,14 @@ Punto Arista::getPtoDestino(){
 
 vector<double> Arista::getVectDir(){
     return vectDir;
+}
+
+double Arista::getAnguloLb(){
+    return anguloWithLineb;
+}
+
+void Arista::setAnguloLb(double angulo){
+    anguloWithLineb = angulo;
 }
 
 

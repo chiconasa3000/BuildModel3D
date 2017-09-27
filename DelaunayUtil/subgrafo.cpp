@@ -40,13 +40,13 @@ void SubGrafo::insertPunto(Punto &p){
 
 
 //guardar los candidatos dado el punto base
-void SubGrafo::saveCandidates(Arista lBase, Punto ptoInicio){
+void SubGrafo::saveCandidates(Arista * lBase, Punto ptoInicio){
 
     //conseguir la lista de aristas del punto base
     vector<Arista> *tmp = ptoInicio.getGroupAristas();
     this->listArisCand = vector<Arista>(tmp->begin(),tmp->end());
 
-    //manejo de operaciones con aristas.
+    //manejo de operaciones con aristas y puntos.
     UtilMaths util;
 
 
@@ -62,7 +62,7 @@ void SubGrafo::saveCandidates(Arista lBase, Punto ptoInicio){
 
         Arista aristaTmp(a,b);
         //calculamos el angulo actual entre linea base y la arista actual
-        double angTemp = util.calcAngulo(&lBase,&aristaTmp);
+        double angTemp = util.calcAngulo(lBase,&aristaTmp);
         //insertamos el angulo a la lista
         angulosAristas.push_back(angTemp);
     }
@@ -84,6 +84,16 @@ void SubGrafo::orderAristCand(vector<double> angulosAristas){
     vector<Arista> listAristTemp;
 
     for(int i=0;i<indAng.size();i++){
+        //la misma cantidad de angulos es la misma cantidad de aristas
+        //por lo cual reusamos los mismos indices ordenados para inserta
+        //los angulos de cada arista
+
+        //guardamos los angulos de las aristas
+        //Arista aristaTmp = listArisCand[indAng[i]];
+        //aristaTmp.setAnguloLb(angulosAristas[indAng[i]]);
+
+        listArisCand[indAng[i]].setAnguloLb(angulosAristas[indAng[i]]);
+
         listAristTemp.push_back(listArisCand[indAng[i]]);
     }
 

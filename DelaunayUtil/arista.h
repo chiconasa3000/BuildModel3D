@@ -28,9 +28,13 @@ public:
     int getIdOrigen();
     int getIdDestino();
     vector<double> getVectDir();
-    //en punto
+    //recuperacion de puntos
     Punto getPtoOrigen();
     Punto getPtoDestino();
+
+    //recuperacion del angulo de arista con linea base
+    double getAnguloLb();
+    void setAnguloLb(double angulo);
 private:
     //static int idArista;
 
@@ -41,6 +45,9 @@ private:
     //Arista normal que solo posee los ides de los puntos
     int idOrigen = 0;
     int idDestino = 0;
+
+    //angulo de arista con la linea base
+    double anguloWithLineb = 0;
 
     vector<double> vectDir;
 };
