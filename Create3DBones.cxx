@@ -191,11 +191,9 @@ void Create3DBones::reproyeccion(){
     Grafo *grafDelaunay = miDelaunay.getGrafoDelaunay();
     //grafDelaunay->printDataGrafo();
     grafDelaunay->doTriangBase();
-    //grafDelaunay->printAristasGrafo();
-    //grafDelaunay->testGrafo();
-
+    grafDelaunay->printDataGrafo();
     grafDelaunay->drawGrafo(getRenderWindow(this->ui->qvtkWidgetDelaunay));
-    grafDelaunay->printIdPuntos();
+
     grafDelaunay->mergeGrafo();
     //reproyeccionMalla();
 }

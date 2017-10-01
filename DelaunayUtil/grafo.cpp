@@ -6,18 +6,21 @@ Grafo::Grafo(){
 
 Grafo::Grafo(vector<vector<vector<double>>> listSubgrafo)
 {
-    int contNroVert= 0;
+    //crear un grafo (adevertencia: adelantandose al render del grafo)
+    grafoVtk = vtkSmartPointer<vtkMutableUndirectedGraph>::New();
+
+    int contNroVertGraf= 0;
     //recorriendo el grupo general
     for(int i=0; i<listSubgrafo.size();i++){
-        //imprimiendo los grupos pequeños
 
         //creamos un subgrafo temporal
         SubGrafo subgrafTemp;
 
 
         int nroPuntos = listSubgrafo[i].size();
+        subgrafTemp.setNroPtos(nroPuntos);
         //acumulador de nro de vertices
-        contNroVert += nroPuntos;
+        contNroVertGraf += nroPuntos;
 
         for(int j=0; j<nroPuntos; j++){
 
@@ -35,8 +38,14 @@ Grafo::Grafo(vector<vector<vector<double>>> listSubgrafo)
         group_subgrafos.push_back(subgrafTemp);
     }
 
+    //Creacion de indices usando la clase render del grafo
+    //despues de haber hecho la construccion inicial
+    for(int i=0; i<group_subgrafos.size();i++){
+        group_subgrafos[i].createIdsPuntosSubgrafo(grafoVtk);
+    }
+
     //iniciamos el nro de vertices total del grafo
-    nroVertGrafo = contNroVert;
+    nroVertGrafo = contNroVertGraf;
 
 }
 
@@ -122,8 +131,10 @@ bool Grafo::testFinalCandidato(SubGrafo *s,vector<Arista> listCand, Arista * lin
                 testCand = true;
                 //Guardamos el punto final candidato
                 ptoCand = new Punto();
-                ptoCand->setX(ptosS1[aristCandTemp.getIdDestino()].getX());
-                ptoCand->setY(ptosS1[aristCandTemp.getIdDestino()].getY());
+                //ptoCand->setX(ptosS1[aristCandTemp.getIdDestino()].getX());
+                //ptoCand->setY(ptosS1[aristCandTemp.getIdDestino()].getY());
+                //ptoCand->setIdVert(ptosS1[aristCandTemp.getIdDestino()].getIdVert());
+                ptoCand->copiar(ptosS1[aristCandTemp.getIdDestino()]);
             }else{
                 //En caso de ser finalmente no cocircular
                 //borramos la arista actual
@@ -143,11 +154,13 @@ bool Grafo::testFinalCandidato(SubGrafo *s,vector<Arista> listCand, Arista * lin
         }
     }
 
+    //Ojo: si no entra al primer for: testCand sera false
+
     //para todos los casos
     return testCand;
 }
 
-Punto Grafo::testCandidatos(SubGrafo *s1,SubGrafo *s2,vector<Arista> listCandS1, vector<Arista>listCandS2, Arista *lineabase){
+Punto Grafo::testCandidatos(SubGrafo *s1,SubGrafo *s2,vector<Arista> listCandS1, vector<Arista>listCandS2, Arista *lineabase, bool &esSubIzq){
     //manejo de operaciones con aristas y puntos.
     UtilMaths util;
     //Arista *lineabase_2 = doLineaBase(s1,s2);
@@ -155,8 +168,8 @@ Punto Grafo::testCandidatos(SubGrafo *s1,SubGrafo *s2,vector<Arista> listCandS1,
     Punto *ptoCandRight;
     Punto *ptoCandLeft;
     //se comprobara por cada subgrafo los criterios de aceptacion
-    bool finalCandRight = testFinalCandidato(s1,listCandS1, lineabase, ptoCandRight);
-    bool finalCandLeft = testFinalCandidato(s2,listCandS2, lineabase, ptoCandLeft);
+    bool finalCandLeft = testFinalCandidato(s1,listCandS1, lineabase, ptoCandLeft);
+    bool finalCandRight = testFinalCandidato(s2,listCandS2, lineabase, ptoCandRight);
 
     //En caso de que ambos candidatos existan tanto de s1 y s2
     if(finalCandLeft && finalCandRight){
@@ -164,14 +177,21 @@ Punto Grafo::testCandidatos(SubGrafo *s1,SubGrafo *s2,vector<Arista> listCandS1,
 
         //cumple el punto candidato izquierda
         if(testMixCoCircular == true){
+            esSubIzq = true;
             return *ptoCandLeft;
         }else{
             return *ptoCandRight;
         }
     }else if(finalCandLeft == true && finalCandRight == false){
+        esSubIzq  = true;
         return *ptoCandLeft;
-    }else{
+    }else if(finalCandLeft == false && finalCandRight == true){
         return *ptoCandRight;
+    }else if(finalCandLeft == false && finalCandRight == false){
+        //por defecto se mandara un punto vacio
+        //y la bandera estara en false al no haber ningun candidato
+        Punto *ptoCand = new Punto();
+        return *ptoCand;
     }
 
 }
@@ -190,42 +210,108 @@ Arista* Grafo::doLineaBase(SubGrafo *s1,SubGrafo *s2){
 
 //funcion general del grafo para guardar candidatos de 2 subgrafos
 void Grafo::saveCandidatos(Arista *lbase, SubGrafo *s1,SubGrafo *s2){
-    Arista *lbase2 = lbase;
-    //conseguir los menores puntos en coord y
-    Punto ps1 = s1->getMenorPtoy();
-    Punto ps2 = s2->getMenorPtoy();
+    //el punto origen sera para el subgrafo s1 (izquierdo)
+    //el punto destino sera para el subgrafo s2 (derecho)
+    s1->saveCandidates(lbase,s1->getGroupPuntos()[lbase->getIdOrigen()],true); //candidatos del subgrafo 1
+    s2->saveCandidates(lbase,s2->getGroupPuntos()[lbase->getIdDestino()],false); //candidatos del subgrafo 2
+}
 
-    //con el punto menor guardamos los candidatos de aristas de cada subgrafo
-    s1->saveCandidates(lbase2,ps1); //candidatos del subgrafo 1
-    s2->saveCandidates(lbase2,ps2); //candidatos del subgrafo 2
+void Grafo::saveIdPairCand(Punto ptoCand,Arista *lineBase, vector<vector<int>> *idsCandL,vector<vector<int>> *idsCandR,bool esSubIzq){
+    //primero guardamos la linea base actual
+    vector<int> idPair;
+    idPair.push_back(lineBase->getIdOrigen());
+    idPair.push_back(lineBase->getIdDestino());
+    //push los ides de la linea base
+    idsCandL->push_back(idPair);
+
+
+    vector<int> idPairPto;
+    //el orden de insercion depende de que subgrafo pertenece el pto Candidato
+    if(esSubIzq == true){
+        //ahora guardamos los id del pto candidato
+        idPairPto.push_back(ptoCand.getIdVert());       //por ser del subgrafo izquierdo
+        idPairPto.push_back(lineBase->getIdDestino());
+
+        //actualizando linea base
+        lineBase->setPtoOrigen(ptoCand);
+
+    }else{
+        //ahora guardamos los id del pto candidato
+        idPairPto.push_back(lineBase->getIdOrigen());
+        idPairPto.push_back(ptoCand.getIdVert());       //por ser del subgrafo derecho
+
+        //actualizando linea base
+        lineBase->setPtoDestino(ptoCand);
+    }
+    idsCandL->push_back(idPairPto);
 }
 
 void Grafo::mergeGrafo(){
 
     //solo se lee el un solo grafo el 1ero siempre quedara fija
     //al realizar el merge
+    vector<vector<int>> *idesPairCandL = new vector<vector<int>>();
+    vector<vector<int>> *idesPairCandR = new vector<vector<int>>();
+    SubGrafo *s1 = &group_subgrafos[0];
+    //este subgrafo es el que cambiara constantemente
+    SubGrafo *s2 = &group_subgrafos[1];
+    //capturamos el menor punto en y de cada subgrafo
+    s1->calcMenorPointInYcoord();
+    s2->calcMenorPointInYcoord();
+    //establecemos la linea base para ambos subgrafos
+    Arista *lineaBase = doLineaBase(s1,s2);
+
+    bool esSubIzq = false;
+
+    //insertamos los nuevos puntos sobre cada subgrafo
+    //estos seran leidos o consultados durante la prueba de candidatos
+    //pero no deberan ser recorridos es decir no iterar el subgrafo
+    //del inicio al final
+
+    s1->insertPointsTemp(s2,true);
+    s2->insertPointsTemp(s1,false);
 
     //for(int i=1; i<group_subgrafos.size(); i++){
+    int cont = 1;
+    while(true){
+        //guarda los candidatos para ambos subgrafos
+        saveCandidatos(lineaBase,s1,s2);
 
-        SubGrafo *s1 = &group_subgrafos[0];
-        //este subgrafo es el que cambiara constantemente
-        SubGrafo *s2 = &group_subgrafos[1];
-
-        //capturamos el menor punto en y de cada subgrafo
-        s1->calcMenorPointInYcoord();
-        s2->calcMenorPointInYcoord();
-
-        //establecemos la linea base para ambos subgrafos
-        Arista *lineaBase = doLineaBase(s1,s2);
-        saveCandidatos(lineaBase,s1,s2); //guarda los candidatos para ambos subgrafos
-
+        //obtenemos los candidatos
         vector<Arista> listCandS1 = s1->getListArisCand();
         vector<Arista> listCandS2 = s2->getListArisCand();
 
-
         //Obteniendo el punto final candidato de ambos subgrafos
-        Punto ptoFinalCand = testCandidatos(s1,s2,listCandS1,listCandS2,lineaBase);
-    //}
+        Punto ptoFinalCand = testCandidatos(s1,s2,listCandS1,listCandS2,lineaBase,esSubIzq);
+
+        //guardamos los ides de las nuevas aristas y actualizamos la linea base
+        //saveIdPairCand(ptoFinalCand, lineaBase, idesPairCandL,idesPairCandR,esSubIzq);
+
+        int difPuntosS1 = s1->getNroPtos();
+        int difPuntosS2 = s2->getNroPtos();
+
+        //insertar la linea base
+        s1->insertArista(lineaBase->getIdOrigen(),lineaBase->getIdDestino());
+        s2->insertArista(lineaBase->getIdDestino(),lineaBase->getIdOrigen());
+
+        //insertamos la arista que contiene el punto candidato y un punto de la linea base
+        if(esSubIzq){
+            s1->insertArista(ptoFinalCand.getIdVert(),lineaBase->getIdDestino());
+            s2->insertArista(lineaBase->getIdDestino(),ptoFinalCand.getIdVert());
+            //actualizamos la linea base
+            lineaBase->setPtoOrigen(ptoFinalCand);
+            lineaBase->setIdOrigen(ptoFinalCand.getIdVert());
+        }else{
+            s2->insertArista(ptoFinalCand.getIdVert(),lineaBase->getIdOrigen());
+            s1->insertArista(lineaBase->getIdOrigen(),ptoFinalCand.getIdVert());
+            //actualizamos la linea base
+            lineaBase->setPtoDestino(ptoFinalCand);
+            lineaBase->setIdDestino(ptoFinalCand.getIdVert());
+        }
+        cont++;
+
+
+    }
 }
 
 
@@ -240,27 +326,26 @@ void Grafo::doTriangBase(){
 }
 
 void Grafo::drawGrafo(vtkSmartPointer<vtkRenderWindow> renderWindow){
-    //crear un grafo
-    grafoVtk = vtkSmartPointer<vtkMutableUndirectedGraph>::New();
+
 
     //almacenador de los puntos
     vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
 
     //recorremos cada subgrafo
-    for(int i=0; i<group_subgrafos.size();i++){
+    /*for(int i=0; i<group_subgrafos.size();i++){
         group_subgrafos[i].createIdsPuntosSubgrafo(grafoVtk);
-    }
+    }*/
 
     //recorremos cada subgrafo
     for(int i=0; i<group_subgrafos.size();i++){
         group_subgrafos[i].drawSubgrafo(grafoVtk.Get(),points.Get());
     }
 
-    cout<<"Puntos::"<<endl;
+    /*cout<<"Puntos::"<<endl;
     for(int i=0;i<points->GetNumberOfPoints();i++){
         double *p = points->GetPoint(i);
-        cout<<p[0]<<" "<<p[1]<<endl;
-    }
+        //cout<<p[0]<<" "<<p[1]<<endl;
+    }*/
 
     //conversion del grafo a un polydata
     grafo2PolyData();

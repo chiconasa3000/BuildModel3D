@@ -28,6 +28,7 @@ public:
     void printPoint();
     void printAristas();
     vtkIdType getIdVert();
+    void setIdVert(vtkIdType idVert);
     void drawAristas(vtkSmartPointer<vtkMutableUndirectedGraph> g,vector<Punto> group_puntos);
     void createIdPunto(vtkSmartPointer<vtkMutableUndirectedGraph> g);
 private:

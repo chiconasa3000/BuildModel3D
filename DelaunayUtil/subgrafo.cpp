@@ -38,13 +38,98 @@ void SubGrafo::insertPunto(Punto &p){
     group_puntos.push_back(p);
 }
 
+//insertar puntos temporalmente en el subgrafo el tamanio de puntos
+//del subgrafo se considerara el mismo
+
+//servira para las consultas sobre ides del su subgrafo contrario
+//durante el proceso de merging
+void SubGrafo::insertPointsTemp(SubGrafo *sFuente,bool esSubIzq){
+
+    int nroPtosSfuente = sFuente->getNroPtos()+1;
+
+    if(esSubIzq){
+        //en caso de ser subgrafo izquierdo la insercion es de manera
+        //normal pero si se actualizan los indices de los grupos de aristas
+        vector<Punto> *tmp = sFuente->getRefGroupPuntos();
+
+
+        for(int i=0;i<sFuente->getNroPtos();i++){
+            //modificando su grupos de aristas
+            //del actual punto obtenemos su lista de arista
+            vector<Arista> *listArist = tmp->at(i).getGroupAristas();
+
+            //vector<Arista> *listArist = *listPuntosSfuente[i].getGroupAristas();
+            for(int j=0;j<listArist->size();j++){
+                int newIdOrigen = listArist->at(j).getIdOrigen()+nroPtosSfuente;
+                int newIdDestino = listArist->at(j).getIdDestino()+nroPtosSfuente;
+                listArist->at(j).setIdOrigen(newIdOrigen);
+                listArist->at(j).setIdDestino(newIdDestino);
+            }
+            //la insertcion es al inicio de la lista esto correra los elementos a la derecha
+            group_puntos.push_back(tmp->at(i));
+        }
+
+    }else{
+        //los indices ya fueron modificados del subgrafo 2 (derecho)
+        //si hemos llamado al insertPointsTemp con el subgrafo izquierdo primero
+        int n = sFuente->getNroPtos();
+        //solo insertamos cada punto del subgrafo izquierda al inicio de la lista
+        vector<Punto> listPuntosSfuente = sFuente->getGroupPuntos();
+
+        for(int j=sFuente->getNroPtos()-1;j>=0;j--){
+            //la insertcion es al inicio de la lista esto correra los elementos a la derecha
+            group_puntos.insert(group_puntos.begin(),listPuntosSfuente[j]);
+        }
+    }
+}
+
+void SubGrafo::insertArista(int idOrigen, int idDestino){
+
+    //buscamos el punto a añadir las aristas
+    Punto *ptoOrigen = &group_puntos[idOrigen];
+
+    //Creamos la arista con los ides dados
+    Arista newArista(idOrigen,idDestino);
+
+    //añadimos la nueva arista al punto
+    ptoOrigen->insertArista(newArista);
+}
+
+
+//borrar candidato que es igual a la linea base
+//advertencia: esto implica una iteracion mas sobre el #de candidatos
+//tomar en cuenta el costo (TODO)
+void SubGrafo::eraseLineaBaseFromCandidatos(Arista *lbase,bool esIzq){
+    bool origen = false;
+    bool destino = false;
+
+    for(int i=0;i<listArisCand.size();i++){
+
+        if(esIzq){
+            origen = listArisCand[i].getIdOrigen() == lbase->getIdOrigen();
+            destino = listArisCand[i].getIdDestino() == lbase->getIdDestino();
+        }else{
+            origen = listArisCand[i].getIdOrigen() == lbase->getIdDestino();
+            destino = listArisCand[i].getIdDestino() == lbase->getIdOrigen();
+        }
+        if(origen && destino){
+            listArisCand.erase(listArisCand.begin()+i);
+            break;
+        }
+    }
+}
 
 //guardar los candidatos dado el punto base
-void SubGrafo::saveCandidates(Arista * lBase, Punto ptoInicio){
+void SubGrafo::saveCandidates(Arista * lBase, Punto ptoInicio,bool esIzq){
 
     //conseguir la lista de aristas del punto base
     vector<Arista> *tmp = ptoInicio.getGroupAristas();
+
+    //eliminar aquel candidato que sea igual a la linea base
+
     this->listArisCand = vector<Arista>(tmp->begin(),tmp->end());
+
+    eraseLineaBaseFromCandidatos(lBase,esIzq);
 
     //manejo de operaciones con aristas y puntos.
     UtilMaths util;
@@ -199,6 +284,10 @@ vector<Punto> SubGrafo::getGroupPuntos(){
     return group_puntos;
 }
 
+vector<Punto>* SubGrafo::getRefGroupPuntos(){
+    return &group_puntos;
+}
+
 vector<Arista> SubGrafo::getListArisCand(){
     //adevertencia para del valor de la lista de aristas
     return listArisCand;
@@ -233,4 +322,12 @@ void SubGrafo::calcMenorPointInYcoord(){
 
 Punto SubGrafo::getMenorPtoy(){
     return minPtoy;
+}
+
+int SubGrafo::getNroPtos(){
+    return nroPtos;
+}
+
+void SubGrafo::setNroPtos(int nroPtos){
+    this->nroPtos = nroPtos;
 }

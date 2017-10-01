@@ -24,20 +24,37 @@ Arista::Arista(Punto ptoO, Punto ptoD){
     ptoOrigen = new Punto();
     ptoDestino = new Punto();
 
-    //ptoOrigen = &ptoO;
-    ptoOrigen->setX(ptoO.getX());
-    ptoOrigen->setY(ptoO.getY());
+    ptoOrigen->copiar(ptoO);
+    //ptoOrigen->setX(ptoO.getX());
+    //ptoOrigen->setY(ptoO.getY());
 
-    //ptoDestino = &ptoD;
-    ptoDestino->setX(ptoD.getX());
-    ptoDestino->setY(ptoD.getY());
+    ptoDestino->copiar(ptoD);
+    //ptoDestino->setX(ptoD.getX());
+    //ptoDestino->setY(ptoD.getY());
+
     //solo para inicializar aunque nunca los tendra
-    idOrigen = -1;
-    idDestino = -1;
+    idOrigen = ptoO.getIdVert();
+    idDestino = ptoD.getIdVert();
 
     anguloWithLineb = -1;
 }
 
+
+Arista::Arista(Punto ptoO, Punto ptoD,int difA,int difB){
+    //creando alojamiento de memoria
+    ptoOrigen = new Punto();
+    ptoDestino = new Punto();
+
+    ptoOrigen->copiar(ptoO);
+    ptoDestino->copiar(ptoD);
+
+    //el idvert general convertir a un indice vertice local
+    idOrigen = ptoO.getIdVert()-difA;
+    //el idvert general convertir a un indice vertice local
+    idDestino = ptoD.getIdVert()-difB;
+
+    anguloWithLineb = -1;
+}
 
 void Arista::copiar(const Arista &a){
     idOrigen = a.idOrigen;
@@ -113,6 +130,13 @@ int Arista::getIdDestino(){
     return idDestino;
 }
 
+void Arista::setIdOrigen(int id){
+    idOrigen = id;
+}
+void Arista::setIdDestino(int id){
+    idDestino = id;
+}
+
 Punto Arista::getPtoOrigen(){
     return *ptoOrigen;
 }
@@ -120,6 +144,19 @@ Punto Arista::getPtoOrigen(){
 Punto Arista::getPtoDestino(){
     return *ptoDestino;
 }
+
+void Arista::setPtoOrigen(Punto o){
+    ptoOrigen->setX(o.getX());
+    ptoOrigen->setY(o.getY());
+    ptoOrigen->setIdVert(o.getIdVert());
+}
+
+void Arista::setPtoDestino(Punto d){
+    ptoDestino->setX(d.getX());
+    ptoDestino->setY(d.getY());
+    ptoDestino->setIdVert(d.getIdVert());
+}
+
 
 vector<double> Arista::getVectDir(){
     return vectDir;

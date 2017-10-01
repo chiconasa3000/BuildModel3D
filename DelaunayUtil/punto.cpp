@@ -20,7 +20,8 @@ void Punto::copiar(const Punto &p){
 
     //adevertencia: solo estamos cambiando la referencia
     //esto seria que ambos apuntan al mismo grupo de aristas
-    group_aristas = p.group_aristas;
+    group_aristas.clear();
+    group_aristas = vector<Arista>(p.group_aristas.begin(),p.group_aristas.end());
     //group_aristas.(p.group_aristas.begin(), p.group_aristas.end());
     //group_aristas = new vector<Arista>(p.group_aristas->begin(), p.group_aristas->end() );
 }
@@ -126,6 +127,10 @@ void Punto::createIdPunto(vtkSmartPointer<vtkMutableUndirectedGraph> g){
 
 vtkIdType Punto::getIdVert(){
     return idVert;
+}
+
+void Punto::setIdVert(vtkIdType idVert){
+    this->idVert = idVert;
 }
 
 vector<Arista>* Punto::getGroupAristas(){

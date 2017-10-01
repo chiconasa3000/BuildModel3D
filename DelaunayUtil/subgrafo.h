@@ -34,13 +34,20 @@ public:
     void doConnectionPoints();
 
     //conseguir los candidadtos del actual subgrafo
-    void saveCandidates(Arista * lineaBase, Punto base);
+    void saveCandidates(Arista * lBase, Punto ptoInicio,bool esIzq);
     //ordenar aristas candidatas
     void orderAristCand(vector<double> angulosAristas);
+    //eliminar la linea base como candidato
+    void eraseLineaBaseFromCandidatos(Arista *lbase,bool esIzq);
+
 
     //conseguir el menor punto de la lista de puntos del subgrafo
     void calcMenorPointInYcoord();
     Punto getMenorPtoy();
+
+    //insertar puntos temporalmente ya que posteriormente seran reemplazados
+    void insertPointsTemp(SubGrafo *s,bool esSubIzq);
+    void insertArista(int idOrigen, int idDestino);
 
     void printSubgrafo();
     void printAristaSubGra();
@@ -48,7 +55,10 @@ public:
     void createIdsPuntosSubgrafo(vtkSmartPointer<vtkMutableUndirectedGraph> g);
     void printIdes();
     vector<Punto> getGroupPuntos();
+    vector<Punto>* getRefGroupPuntos();
     vector<Arista> getListArisCand();
+    int getNroPtos();
+    void setNroPtos(int nroPtos);
     //    bool doFirstCond();
     //    void anguloEnAristas(int idAristaA, int idAristaB);
     //    bool doSecondCond();
@@ -73,6 +83,9 @@ private:
 
     //Final Candidato
     Punto finalCandidato;
+
+    //Nro de puntos por subgrafo
+    int nroPtos;
 };
 
 #endif // SUBGRAFO_H

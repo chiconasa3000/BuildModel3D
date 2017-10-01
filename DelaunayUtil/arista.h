@@ -15,6 +15,7 @@ public:
     Arista();
     //Arista(Punto *ptoO, Punto *ptoD);
     Arista(Punto ptoO, Punto ptoD);
+    Arista(Punto ptoO, Punto ptoD,int difA,int difB);
     Arista(int idOrigen, int idDestino);
 
     Arista& operator=(const Arista &rhs);
@@ -27,10 +28,14 @@ public:
     void printArista();
     int getIdOrigen();
     int getIdDestino();
+    void setIdOrigen(int id);
+    void setIdDestino(int id);
     vector<double> getVectDir();
     //recuperacion de puntos
     Punto getPtoOrigen();
     Punto getPtoDestino();
+    void setPtoOrigen(Punto o);
+    void setPtoDestino(Punto ds);
 
     //recuperacion del angulo de arista con linea base
     double getAnguloLb();
