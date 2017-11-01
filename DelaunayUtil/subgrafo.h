@@ -35,6 +35,8 @@ public:
 
     //conseguir los candidadtos del actual subgrafo
     void saveCandidates(Arista * lBase, Punto ptoInicio,bool esIzq);
+    //filtrar candidatos que no sean la linea base
+    void filtrarCandidatos(Arista *lbase,map<int,Arista,less<int>> *tmp,bool esIzq);
     //ordenar aristas candidatas
     void orderAristCand(vector<double> angulosAristas);
     //eliminar la linea base como candidato
@@ -77,6 +79,10 @@ private:
 
     //lista de aristas candidatas del subgrafo
     vector<Arista> listArisCand;
+    //map<int, Arista, std::less<int>> listArisCand;
+
+    //indice actual de la lista de aristas candidatas
+    int iterActAC = 0;
 
     //Menor punto en coordenada y
     Punto minPtoy;

@@ -6,6 +6,7 @@
 #include <vector>
 #include <vtk-7.1/vtkSmartPointer.h>
 #include <vtk-7.1/vtkMutableUndirectedGraph.h>
+#include <map>
 using namespace std;
 
 class Arista;
@@ -24,7 +25,7 @@ public:
     double getY();
     void setX(double coor_x);
     void setY(double coor_y);
-    vector<Arista>* getGroupAristas();
+    map<int,Arista,less<int>>* getGroupAristas();
     void printPoint();
     void printAristas();
     vtkIdType getIdVert();
@@ -45,7 +46,10 @@ private:
     vtkIdType idVert;
 
     //grupo de aristas del punto
-    vector<Arista> group_aristas;
+    //vector<Arista> group_aristas;
+    map<int, Arista, less<int>> group_aristas;
+    int iterActGA = 0;
+    //vector<Arista> group_aristas;
 };
 
 #endif // PUNTO_H

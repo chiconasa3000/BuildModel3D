@@ -21,6 +21,7 @@ Arista::Arista(){
 
 Arista::Arista(Punto ptoO, Punto ptoD){
     //creando alojamiento de memoria
+    //create storage input
     ptoOrigen = new Punto();
     ptoDestino = new Punto();
 
@@ -33,29 +34,34 @@ Arista::Arista(Punto ptoO, Punto ptoD){
     //ptoDestino->setY(ptoD.getY());
 
     //solo para inicializar aunque nunca los tendra
+    //attention it is only for initialization but it never has
     idOrigen = ptoO.getIdVert();
     idDestino = ptoD.getIdVert();
 
     anguloWithLineb = -1;
 }
 
-
+//constructor temporal it uses in case the idvert differs from id from pointlist
 Arista::Arista(Punto ptoO, Punto ptoD,int difA,int difB){
     //creando alojamiento de memoria
+    //create storage input
     ptoOrigen = new Punto();
     ptoDestino = new Punto();
 
     ptoOrigen->copiar(ptoO);
     ptoDestino->copiar(ptoD);
 
+    //general idvert cast to local id vertex
     //el idvert general convertir a un indice vertice local
     idOrigen = ptoO.getIdVert()-difA;
+    //general idvert cast to local id vertex
     //el idvert general convertir a un indice vertice local
     idDestino = ptoD.getIdVert()-difB;
 
     anguloWithLineb = -1;
 }
 
+//copy all data public from other Arista
 void Arista::copiar(const Arista &a){
     idOrigen = a.idOrigen;
     idDestino = a.idDestino;
@@ -70,8 +76,11 @@ void Arista::copiar(const Arista &a){
     anguloWithLineb = a.anguloWithLineb;
 }
 
+
+//operator equal for assignements in Arista
 Arista& Arista::operator=(const Arista &rhs) {
 
+    //in case they are differents
     //si son diferentes
     if (this != &rhs) {
         this->idOrigen = -1;
@@ -85,6 +94,8 @@ Arista& Arista::operator=(const Arista &rhs) {
     return *this;
 }
 
+
+//operator equal for assignements in Arista using pointer
 Arista* Arista::operator=(const Arista *rhs) {
 
     //si son diferentes
@@ -100,12 +111,14 @@ Arista* Arista::operator=(const Arista *rhs) {
     return this;
 }
 
+//constructor using id points
 Arista::Arista(int idPtoO, int idPtoD)
 {
 
     //ptoOrigen = new Punto(ptoO);
     //ptoDestino = new Punto(ptoD);
 
+    //the points should be relation to vector of original point
     //los puntos deben estar relacionados al vector de puntos original
     idOrigen = idPtoO;
     idDestino = idPtoD;
@@ -117,6 +130,7 @@ Arista::Arista(int idPtoO, int idPtoD)
 
 }
 
+//print information from arista
 void Arista::printArista(){
     cout<<idOrigen<<" "<<idDestino<<endl;
     //ptoOrigen->printPoint();

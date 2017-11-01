@@ -12,7 +12,7 @@
 #include <QMenuBar>
 #include <QGridLayout>
 #include <QLabel>
-
+#include <QDebug>
 #include <vtk-7.1/vtkPolyDataMapper.h>
 #include <vtk-7.1/vtkRenderer.h>
 #include <vtk-7.1/vtkRenderWindow.h>
@@ -71,20 +71,46 @@
 #include <vector>
 #include <fstream>
 
+#include <vtkSmartPointer.h>
+#include <vtkMarchingCubes.h>
+#include <vtkMetaImageReader.h>
+
+#include <vtkSphereSource.h>
+#include <vtkProbeFilter.h>
+#include <vtkSphere.h>
+#include <vtkClipDataSet.h>
+#include <vtkImplicitVolume.h>
+#include <vtkUnstructuredGrid.h>
+#include <vtkLookupTable.h>
+
+#include <vtkRenderer.h>
+#include <vtkRenderWindow.h>
+#include <vtkRenderWindowInteractor.h>
+#include <vtkDataSetMapper.h>
+#include <vtkPolyDataMapper.h>
+#include <vtkProperty.h>
+#include <vtkActor.h>
+#include <vtkCamera.h>
+#include <vtkProperty.h>
+#include "vtkDICOMImageReader.h"
+#include <vtkSampleFunction.h>
+#include <vtkCylinder.h>
+
+
 // For compatibility with new VTK generic data arrays
 #ifdef vtkGenericDataArray_h
 #define InsertNextTupleValue InsertNextTypedTuple
 #endif
 
 
-
+/*
 #include "itkImage.h"
 #include "itkImageFileReader.h"
 #include "itkRescaleIntensityImageFilter.h"
 #include "itkCastImageFilter.h"
 #include "itkCannyEdgeDetectionImageFilter.h"
-
-#include "QuickView.h"
+*/
+//#include "QuickView.h"
 
 //#include "interactorstyle.h"
 //#include "mouseinteractorstyle.h"
@@ -99,7 +125,11 @@ Create3DBones::Create3DBones()
     this->ui = new Ui_Create3DBones;
     this->ui->setupUi(this);
 
-    //QLabel
+    //grupo de acciones y menus de la ui
+    createActions();
+    createMenus();
+
+    //Graficos para el visor de imagenes
     image_label = new QLabel;
     image_label->setBackgroundRole(QPalette::Base);
     image_label->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
@@ -122,27 +152,8 @@ Create3DBones::Create3DBones()
     layout->addWidget(scrollArea,0,0);
     this->ui->box_image->setLayout(layout);
 
-    //QGridLayout *layout2 = new QGridLayout(this);
-    //layout2->addWidget(scrollArea2,0,0);
-    //this->ui->box_cont_imag->setLayout(layout2);
-
-    createActions();
-    createMenus();
-
-    // Esfera
-    vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
-    sphereSource->Update();
-    vtkSmartPointer<vtkPolyDataMapper> sphereMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    sphereMapper->SetInputConnection(sphereSource->GetOutputPort());
-    vtkSmartPointer<vtkActor> sphereActor = vtkSmartPointer<vtkActor>::New();
-    sphereActor->SetMapper(sphereMapper);
-
-    // VTK Renderer
-    vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
-    renderer->AddActor(sphereActor);
-
-    // VTK/Qt wedded
-    this->ui->qvtkWidget->GetRenderWindow()->AddRenderer(renderer);
+    /*********+ ui simulador de rayos x ****************/
+    prepGraphSimXray();
 
     // Set up action signals and slots
     connect(this->ui->actionExit, SIGNAL(triggered()), this, SLOT(slotExit()));
@@ -153,13 +164,44 @@ Create3DBones::Create3DBones()
     connect(this->ui->but_exe_pers,  SIGNAL(clicked()), this, SLOT(ejec_proyeccion()));
     connect(this->ui->but_silueta, SIGNAL(clicked()), this, SLOT(ejec_proyeccionGrid()));
     connect(this->ui->but_delaunay,  SIGNAL(clicked()), this, SLOT(reproyeccion()));
+    connect(this->ui->but_load_3dimage, SIGNAL(clicked()), this, SLOT(load_3dimage()));
+    //simulador de rayos x
+    connect(this->ui->comboBox_typeBlend,SIGNAL(currentIndexChanged(const QString&)),this,SLOT(applyBlend(const QString&)));
+    connect(this->ui->but_trans_xray, SIGNAL(clicked()), this, SLOT(applyTransSimulXray()));
+    //par ael cambio de spin box
+    connect(this->ui->spinbox_window, SIGNAL(valueChanged(int)), this, SLOT(setWindowXray(int)));
+    connect(this->ui->spinbox_level, SIGNAL(valueChanged(int)), this, SLOT(setLevelXray(int)));
+    connect(this->ui->butApplyOpacity, SIGNAL(clicked()), this, SLOT(applyOpacityValues()));
+    connect(this->ui->checkbox_clip, SIGNAL(clicked(bool)), this, SLOT(evalClip(bool)));
 
+    //test con probefilter
+    connect(this->ui->butDic, SIGNAL(clicked()), this, SLOT(loadDic()));
 
+}
 
+void Create3DBones::prepGraphSimXray(){
+    listTypesBlend = new QStringList();
+    listTypesBlend->append("MIP");
+    listTypesBlend->append("CompositeRamp");
+    listTypesBlend->append("CompositeShadeRamp");
+    listTypesBlend->append("CTSkin");
+    listTypesBlend->append("CTBone");
+    listTypesBlend->append("CTMuscle");
+    listTypesBlend->append("RGBComposite");
+    //this->ui->comboBox_typeBlend->addItems(*(simXray->getlistTypesBlend()));
+    this->ui->comboBox_typeBlend->addItems(*listTypesBlend);
+}
+
+QStringList * Create3DBones::getTypesBlend(){
+    return listTypesBlend;
 }
 
 vtkSmartPointer<vtkRenderWindow> Create3DBones::getRenderWindow(QVTKWidget *w){
     return w->GetRenderWindow();
+}
+
+vtkSmartPointer<vtkRenderWindowInteractor> Create3DBones::getInteractor(QVTKWidget *w){
+    return w->GetRenderWindow()->GetInteractor();
 }
 
 void Create3DBones::slotExit()
@@ -192,9 +234,10 @@ void Create3DBones::reproyeccion(){
     //grafDelaunay->printDataGrafo();
     grafDelaunay->doTriangBase();
     grafDelaunay->printDataGrafo();
-    grafDelaunay->drawGrafo(getRenderWindow(this->ui->qvtkWidgetDelaunay));
-
+    //grafDelaunay->drawGrafo(getRenderWindow(this->ui->qvtkWidgetDelaunay));
     grafDelaunay->mergeGrafo();
+    grafDelaunay->genNuevoIdsGraphGen();
+    grafDelaunay->drawGrafo(getRenderWindow(this->ui->qvtkWidgetDelaunay));
     //reproyeccionMalla();
 }
 
@@ -895,3 +938,220 @@ std::string Create3DBones::getRutaImagen(){
     return rutaImagen.toStdString();
 }
 
+void Create3DBones::cargar3Dimage(std::string filename){
+    //creacion del simulador de rayos x
+    vtkRenderWindow *renWin = getRenderWindow(this->ui->qvtkWidget_3);
+    //este tipo interactor es vtkrenderwindowinteractor no es qvtkitneractors
+    vtkRenderWindowInteractor *iren = renWin->GetInteractor();
+    simXray = new SimuladorXray(renWin,iren);
+
+    //asignamos la ruta de la imagen 3D a cargar
+    simXray->setDirectory3Dimage(filename);
+
+    //renderizamos la imagen 3D
+    simXray->show();
+}
+
+void Create3DBones::load_3dimage(){
+    //cargamos el dicom
+    QString fileName = QFileDialog::getExistingDirectory(this, tr("Abrir Directorio"),"/home", QFileDialog::ShowDirsOnly| QFileDialog::DontResolveSymlinks);
+    if (!fileName.isEmpty()) {
+        cargar3Dimage(fileName.toStdString());
+    }else if (fileName.isEmpty()) {
+        QMessageBox::information(this, tr("Model Viewer"), tr("No puede cargar el modelos %1.").arg(fileName));
+        return;
+    }
+
+}
+
+void Create3DBones::applyBlend(const QString& typeblend){
+    if(!QString::compare(typeblend, "MIP", Qt::CaseInsensitive)){
+        simXray->applyBlendMIP();
+    }else if(!QString::compare(typeblend, "CompositeRamp", Qt::CaseInsensitive)){
+        simXray->applyBlendCompRamp();
+    }else if(!QString::compare(typeblend, "CompositeShadeRamp", Qt::CaseInsensitive)){
+        simXray->applyBlendCompShadeRamp();
+    }else if(!QString::compare(typeblend, "CTSkin", Qt::CaseInsensitive)){
+        simXray->applyBlendCTSkin();
+    }else if(!QString::compare(typeblend, "CTBone", Qt::CaseInsensitive)){
+        simXray->applyBlendCTBone();
+    }else if(!QString::compare(typeblend, "CTMuscle", Qt::CaseInsensitive)){
+        simXray->applyBlendCTMuscle();
+    }else if(!QString::compare(typeblend, "RGBComposite", Qt::CaseInsensitive)){
+        simXray->applyBlendRgbComp();
+    }
+}
+
+void Create3DBones::applyTransSimulXray(){
+    QString rotx = this->ui->editRotX->text();
+    QString roty = this->ui->editRotY->text();
+    QString rotz = this->ui->editRotZ->text();
+    simXray->transformRotImageData(rotx.toDouble(),roty.toDouble(),rotz.toDouble());
+}
+
+void Create3DBones::setWindowXray(int opacwin){
+    simXray->setOpacityWindow(opacwin);
+}
+void Create3DBones::setLevelXray(int opaclev){
+    simXray->setOpacityLevel(opaclev);
+}
+
+void Create3DBones::applyOpacityValues(){
+    //aplicando los valores actuales de window y level
+    //dependiendo del tipo de blend
+    simXray->updateMapper();
+}
+
+void Create3DBones::evalClip(bool valClip){
+    simXray->setFlagClip(valClip);
+}
+
+void Create3DBones::loadDic(){
+    string filenameDic = "/home/cris/Documentos/DICOMsamples/HipPelvisM";
+    //string filenameVtk = "/home/cris/Documentos/DICOMsamples/pelvisFemenina.vtk";
+    //string filenameDic = "/home/cris/Descargas/PolyDataToImageData/build/SphereVolume.mhd";
+    string filenameVtk = "/home/cris/Documentos/DICOMsamples/pelvisFemenina.vtk";
+    vtkDICOMImageReader *dicomReader = vtkDICOMImageReader::New();
+    dicomReader->SetDirectoryName(filenameDic.c_str());
+    dicomReader->Update();
+
+    //Marching cubes seudo marching cubes
+    vtkPolyDataReader* readerVtk = vtkPolyDataReader::New();
+    readerVtk->SetFileName(filenameVtk.c_str());
+    readerVtk->Update();
+
+    // An isosurface, or contour value of 500 is known to correspond to the
+    // skin of the patient. MARCHING CUBES HERE
+    vtkSmartPointer<vtkMarchingCubes> skinExtractor = vtkSmartPointer<vtkMarchingCubes>::New();
+    skinExtractor->SetInputConnection(dicomReader->GetOutputPort());
+    //skinExtractor->SetInputConnection(readerVtk->GetOutputPort());
+    skinExtractor->SetValue(0, 250);
+
+
+
+    //SIN LA PARTE DEL CLIP
+    // Define a spherical clip function to clip the isosurface
+    vtkSmartPointer<vtkSphere> clipFunction =
+            vtkSmartPointer<vtkSphere>::New();
+    clipFunction->SetRadius(50);
+    clipFunction->SetCenter(150, 250, 500);
+
+
+    // Clip the isosurface with a sphere
+    vtkSmartPointer<vtkClipDataSet> skinClip =
+            vtkSmartPointer<vtkClipDataSet>::New();
+    //skinClip->SetInputConnection(skinExtractor->GetOutputPort()); //STRUCTURE WILL BE CLIPED
+    skinClip->SetInputConnection(readerVtk->GetOutputPort());
+    skinClip->SetClipFunction(clipFunction);// FORM OF THE CLIP (SPHERE)
+    skinClip->SetValue(0);
+    skinClip->GenerateClipScalarsOn();
+    skinClip->Update();
+
+    vtkSmartPointer<vtkDataSetMapper> skinMapper =
+            vtkSmartPointer<vtkDataSetMapper>::New();
+    skinMapper->SetInputConnection(skinClip->GetOutputPort());
+    //skinMapper->SetInputConnection(skinExtractor->GetOutputPort());
+    skinMapper->ScalarVisibilityOff();
+
+    vtkSmartPointer<vtkActor> skin = vtkSmartPointer<vtkActor>::New();
+    skin->SetMapper(skinMapper);
+    //skin->GetProperty()->SetDiffuseColor(1, .49, .25);
+    skin->GetProperty()->SetDiffuseColor(0, 1, 0); //GREEN CONTOUR MARCHING CUBES
+
+    vtkSmartPointer<vtkProperty> backProp =
+            vtkSmartPointer<vtkProperty>::New();
+    //backProp->SetDiffuseColor(0.8900, 0.8100, 0.3400);
+    backProp->SetDiffuseColor(1, 0, 0);//RED INTERIOR OF MARCHING CUBES
+    skin->SetBackfaceProperty(backProp);//setbackfaceproperty
+
+    // Define a model for the "lens". Its geometry matches the implicit
+    // sphere used to clip the isosurface
+    vtkSmartPointer<vtkSphereSource> lensModel =
+            vtkSmartPointer<vtkSphereSource>::New();
+    lensModel->SetRadius(50);
+    lensModel->SetCenter(150, 250, 500);
+    lensModel->SetPhiResolution(300);
+    lensModel->SetThetaResolution(150);
+
+    // Sample the input volume with the lens model geometry
+    vtkSmartPointer<vtkProbeFilter> lensProbe =
+            vtkSmartPointer<vtkProbeFilter>::New();
+    //lensProbe->SetInputConnection(lensModel->GetOutputPort()); //ESTRUCTURA A INTEPORLAR SPHERESOURCE
+    lensProbe->SetInputConnection(readerVtk->GetOutputPort());
+    lensProbe->SetSourceConnection(dicomReader->GetOutputPort()); //DICOM SOURCE INTENSITY
+
+    // Clip the lens data with the isosurface value
+    vtkSmartPointer<vtkClipDataSet> lensClip =
+            vtkSmartPointer<vtkClipDataSet>::New();
+    lensClip->SetInputConnection(lensProbe->GetOutputPort());
+    lensClip->SetValue(250);
+    lensClip->GenerateClipScalarsOff();
+    lensClip->Update();
+
+    // Define a suitable grayscale lut
+    vtkSmartPointer<vtkLookupTable> bwLut =
+            vtkSmartPointer<vtkLookupTable>::New();
+    bwLut->SetTableRange (0, 2048);
+    bwLut->SetSaturationRange (0, 0);
+    bwLut->SetHueRange (0, 0);
+    bwLut->SetValueRange (.2, 1);
+    bwLut->Build();
+
+    vtkSmartPointer<vtkDataSetMapper> lensMapper =
+            vtkSmartPointer<vtkDataSetMapper>::New();
+    lensMapper->SetInputConnection(lensClip->GetOutputPort());
+    lensMapper->SetScalarRange(lensClip->GetOutput()->GetScalarRange());
+    /*lensMapper->SetInputConnection(lensProbe->GetOutputPort());
+    lensMapper->SetScalarRange(lensProbe->GetOutput()->GetScalarRange());*/
+    lensMapper->SetLookupTable(bwLut);
+
+    vtkSmartPointer<vtkActor> lens = vtkSmartPointer<vtkActor>::New();
+    lens->SetMapper(lensMapper);
+
+    // It is convenient to create an initial view of the data. The FocalPoint
+    // and Position form a vector direction. Later on (ResetCamera() method)
+    // this vector is used to position the camera to look at the data in
+    // this direction.
+    /*vtkSmartPointer<vtkCamera> aCamera =
+            vtkSmartPointer<vtkCamera>::New();
+    aCamera->SetViewUp (0, 0, -1);
+    aCamera->SetPosition (0, -1, 0);
+    aCamera->SetFocalPoint (0, 0, 0);
+    aCamera->ComputeViewPlaneNormal();
+    aCamera->Azimuth(30.0);
+    aCamera->Elevation(30.0);*/
+
+    // Create the renderer, the render window, and the interactor. The renderer
+    // draws into the render window, the interactor enables mouse- and
+    // keyboard-based interaction with the data within the render window.
+    //
+    vtkSmartPointer<vtkRenderer> aRenderer =
+            vtkSmartPointer<vtkRenderer>::New();
+
+    ui->qvtkWidget_2->GetRenderWindow()->AddRenderer(aRenderer);
+
+
+    // Actors are added to the renderer. An initial camera view is created.
+    // The Dolly() method moves the camera towards the FocalPoint,
+    // thereby enlarging the image.
+    aRenderer->AddActor(lens);
+    aRenderer->AddActor(skin);
+    //aRenderer->SetActiveCamera(aCamera);
+    aRenderer->ResetCamera ();
+    //aCamera->Dolly(1.5);
+
+    // Set a background color for the renderer and set the size of the
+    // render window (expressed in pixels).
+    aRenderer->SetBackground(.2, .3, .4);
+    ui->qvtkWidget_2->GetRenderWindow()->SetSize(640, 480);
+
+    // Note that when camera movement occurs (as it does in the Dolly()
+    // method), the clipping planes often need adjusting. Clipping planes
+    // consist of two planes: near and far along the view direction. The
+    // near plane clips out objects in front of the plane; the far plane
+    // clips out objects behind the plane. This way only what is drawn
+    // between the planes is actually rendered.
+    aRenderer->ResetCameraClippingRange ();
+
+
+}

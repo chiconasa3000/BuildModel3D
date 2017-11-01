@@ -5,11 +5,14 @@
 
 template <class RAIter, class Compare>
 vector<size_t> argSort(RAIter first, RAIter last, Compare comp){
+    //create the vector which contains index
     //creamos el vector que contendra los indices
     vector<size_t> idx(last-first);
+    //in order to fill idx with initial range and final range starting from cero
     //para llenar idx con el rango de inicio y final comennzando de cero (c++ 11)
     iota(idx.begin(), idx.end(),0);
 
+    //great use of lambda function
     //gran uso de una funcion lambda (*_*)
     //hay captura de variables de first y comp y los usa en una funcion
     //q recibe los indices actuales y compara sus valores
@@ -17,6 +20,8 @@ vector<size_t> argSort(RAIter first, RAIter last, Compare comp){
         return comp(first[i1], first[i2]);
     };
 
+    //order index according to comparation
+    //of link value (vector of angles)
     //ordenamos los indices de acuerdo a la comparacion
     //del valor asociado (vector de angulos)
     sort(idx.begin(), idx.end(), idxComp);
@@ -38,9 +43,11 @@ void SubGrafo::insertPunto(Punto &p){
     group_puntos.push_back(p);
 }
 
+//insert temporal points in the subgraph, the size subgraph will the same
 //insertar puntos temporalmente en el subgrafo el tamanio de puntos
 //del subgrafo se considerara el mismo
 
+//it helps to the
 //servira para las consultas sobre ides del su subgrafo contrario
 //durante el proceso de merging
 void SubGrafo::insertPointsTemp(SubGrafo *sFuente,bool esSubIzq){
@@ -56,7 +63,7 @@ void SubGrafo::insertPointsTemp(SubGrafo *sFuente,bool esSubIzq){
         for(int i=0;i<sFuente->getNroPtos();i++){
             //modificando su grupos de aristas
             //del actual punto obtenemos su lista de arista
-            vector<Arista> *listArist = tmp->at(i).getGroupAristas();
+            map<int,Arista,less<int>> *listArist = tmp->at(i).getGroupAristas();
 
             //vector<Arista> *listArist = *listPuntosSfuente[i].getGroupAristas();
             for(int j=0;j<listArist->size();j++){
@@ -104,7 +111,6 @@ void SubGrafo::eraseLineaBaseFromCandidatos(Arista *lbase,bool esIzq){
     bool destino = false;
 
     for(int i=0;i<listArisCand.size();i++){
-
         if(esIzq){
             origen = listArisCand[i].getIdOrigen() == lbase->getIdOrigen();
             destino = listArisCand[i].getIdDestino() == lbase->getIdDestino();
@@ -119,17 +125,47 @@ void SubGrafo::eraseLineaBaseFromCandidatos(Arista *lbase,bool esIzq){
     }
 }
 
+//seleccionar los candidatos que no sean igual a la linea base
+void SubGrafo::filtrarCandidatos(Arista *lbase,map<int,Arista,less<int>> *listCandPto,bool esIzq){
+
+    std::map<int,Arista,less<int>>::iterator it;
+
+    int lbOrigen = lbase->getIdOrigen();
+    int lbDestino = lbase->getIdDestino();
+    bool equalPtoA = false;
+    bool equalPtoB = false;
+
+    for (it=listCandPto->begin(); it!=listCandPto->end(); ++it){
+        if(esIzq){
+            equalPtoA = (lbOrigen == it->second.getIdOrigen());
+            equalPtoB = (lbDestino == it->second.getIdDestino());
+        }else{
+            equalPtoA = (lbOrigen == it->second.getIdDestino());
+            equalPtoB = (lbDestino == it->second.getIdOrigen());
+        }
+        if(equalPtoA && equalPtoB){
+            continue;
+        }else{
+            listArisCand.push_back(it->second);
+        }
+
+    }
+}
+
 //guardar los candidatos dado el punto base
 void SubGrafo::saveCandidates(Arista * lBase, Punto ptoInicio,bool esIzq){
+    //limpiamos la lista de aristas candidatas
+    listArisCand.clear();
 
     //conseguir la lista de aristas del punto base
-    vector<Arista> *tmp = ptoInicio.getGroupAristas();
+    map<int,Arista,less<int>> *tmp = ptoInicio.getGroupAristas();
 
     //eliminar aquel candidato que sea igual a la linea base
+    filtrarCandidatos(lBase,tmp,esIzq);
 
-    this->listArisCand = vector<Arista>(tmp->begin(),tmp->end());
+    //this->listArisCand = vector<Arista>(tmp->begin(),tmp->end());
 
-    eraseLineaBaseFromCandidatos(lBase,esIzq);
+    //eraseLineaBaseFromCandidatos(lBase,esIzq);
 
     //manejo de operaciones con aristas y puntos.
     UtilMaths util;
@@ -147,7 +183,7 @@ void SubGrafo::saveCandidates(Arista * lBase, Punto ptoInicio,bool esIzq){
 
         Arista aristaTmp(a,b);
         //calculamos el angulo actual entre linea base y la arista actual
-        double angTemp = util.calcAngulo(lBase,&aristaTmp);
+        double angTemp = util.calcAngulo(lBase,&aristaTmp,esIzq);
         //insertamos el angulo a la lista
         angulosAristas.push_back(angTemp);
     }

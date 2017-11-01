@@ -9,13 +9,15 @@ endif()
 
 #Archivos DELAUNAY_UTIL
 set(D_DIR "/home/cris/ExtraPrograms/QtProjects/Example/Example/DelaunayUtil")
+set(D_DIRB "/home/cris/ExtraPrograms/QtProjects/Example/Example")
 set(DELAUNAY_CPP ${D_DIR}/arista.cpp ${D_DIR}/grafo.cpp ${D_DIR}/subgrafo.cpp ${D_DIR}/punto.cpp ${D_DIR}/utilmaths.cpp)
+
 #set(DELAUNAY_HEAD ${D_DIR}/arista.h ${D_DIR}/grafo.h ${D_DIR}/subgrafo.h ${D_DIR}/.h ${D_DIR}/punto.h)
 include_directories( ${D_DIR} )
 
 #Archivos ITK
-find_package(ITK REQUIRED)
-include(${ITK_USE_FILE})
+#find_package(ITK REQUIRED)
+#include(${ITK_USE_FILE})
 
 #Archivos VTK
 find_package(VTK REQUIRED)

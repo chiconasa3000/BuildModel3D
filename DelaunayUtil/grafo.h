@@ -23,7 +23,7 @@ public:
     Arista* doLineaBase(SubGrafo *s1,SubGrafo *s2);
     void saveCandidatos(Arista *lBase,SubGrafo *s1,SubGrafo *s2);
     //comprobacion de criterios para el final candidato
-    Punto testCandidatos(SubGrafo *s1,SubGrafo *s2,vector<Arista> a, vector<Arista> b, Arista *lineabase,bool &esSubIzq);
+    Punto testCandidatos(SubGrafo *s1,SubGrafo *s2,vector<Arista> a, vector<Arista> b, Arista *lineabase,bool &esSubIzq,bool &endMerge);
     bool testFinalCandidato(SubGrafo *s, vector<Arista> listArisCand, Arista * lineabase, Punto * &ptoCand);
     //eliminar arista candidata del subgrafo
     void delArisFromSubgrafo(SubGrafo *s,Arista *aristCandTemp);
@@ -37,6 +37,10 @@ public:
     void printDataGrafo();
     void printAristasGrafo();
     void printIdPuntos();
+    //para una nueva grafica de grafo
+    //cuando hubo un merge
+    void limpiarGrafoVtk();
+    void genNuevoIdsGraphGen();
 private:
     vector<SubGrafo> group_subgrafos;
     vtkSmartPointer<vtkMutableUndirectedGraph> grafoVtk;

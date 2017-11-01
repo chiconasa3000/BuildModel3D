@@ -5,9 +5,10 @@
 #include <QMainWindow>
 #include <string>
 #include "DataMalla.h"
+#include "simuladorxray.h"
 #include "delaunay.h"
 #include "DelaunayUtil/arista.h"
-#include "QuickView.h"
+//#include "QuickView.h"
 //#include "perspecdata.h"
 #include "gestorperspectiva.h"
 #include "ui_Create3DBones.h"
@@ -31,13 +32,20 @@ public:
   ~Create3DBones() {};
   void cargarModelo(std::string,std::string filetype);
   void cargarFileVTK(std::string);
+  void cargar3Dimage(std::string);
   void setRutaImagen(QString filename);
   int calcularNumCifras(int idPoint);
   int calcFactorDecimal(int numCifras);
   vtkSmartPointer<vtkPolyData> ejec_delaunay();
   void reproyeccionMalla();
   vtkSmartPointer<vtkRenderWindow> getRenderWindow(QVTKWidget *w);
+  vtkSmartPointer<vtkRenderWindowInteractor> getInteractor(QVTKWidget *w);
   std::string getRutaImagen();
+
+  //simulador de rayos x
+  void prepGraphSimXray();
+  QStringList * getTypesBlend();
+
   QMenu *fileMenu;
   QMenu *viewMenu;
   QMenu *helpMenu;
@@ -72,6 +80,10 @@ private:
   GestorPerspectiva *grp;
   GestorPerspectiva *grp1;
 
+  //Simulador de rayos x
+  QStringList *listTypesBlend;
+  SimuladorXray *simXray;
+
   //Qaction
     QAction *openAct;
     QAction *exitAct;
@@ -89,6 +101,15 @@ private slots:
   void ejec_proyeccionGrid();
   void load_model_grid();
   void reproyeccion();
+//simulador de rayos x
+  void load_3dimage();
+  void applyBlend(const QString&);
+  void applyTransSimulXray();
+  void setLevelXray(int);
+  void setWindowXray(int);
+  void applyOpacityValues();
+  void evalClip(bool valClip);
+  void loadDic();
 
   //slots de imagenes
   void open();
