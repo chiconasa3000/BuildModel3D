@@ -5,7 +5,7 @@
 #include <vtk-7.1/vtkActor.h>
 #include <vtk-7.1/vtkRenderWindow.h>
 #include <vtk-7.1/vtkRenderer.h>
-#include <vtk-7.1/vtkPolyDataMapper.h>
+#include <vtkPolyDataMapper.h>
 #include <vector>
 
 class Grafo

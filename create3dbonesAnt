@@ -95,7 +95,7 @@
 #include "vtkDICOMImageReader.h"
 #include <vtkSampleFunction.h>
 #include <vtkCylinder.h>
-#include <vtkSTLReader.h>
+
 
 // For compatibility with new VTK generic data arrays
 #ifdef vtkGenericDataArray_h
@@ -103,17 +103,13 @@
 #endif
 
 
-
-#include "itkMesh.h"
-#include "itkMeshFileReader.h"
-
+/*
 #include "itkImage.h"
 #include "itkImageFileReader.h"
-#include "itkImageFileWriter.h"
-
+#include "itkRescaleIntensityImageFilter.h"
 #include "itkCastImageFilter.h"
-#include "itkTriangleMeshToBinaryImageFilter.h"
-
+#include "itkCannyEdgeDetectionImageFilter.h"
+*/
 //#include "QuickView.h"
 
 //#include "interactorstyle.h"
@@ -175,14 +171,16 @@ Create3DBones::Create3DBones()
     //par ael cambio de spin box
     connect(this->ui->spinbox_window, SIGNAL(valueChanged(int)), this, SLOT(setWindowXray(int)));
     connect(this->ui->spinbox_level, SIGNAL(valueChanged(int)), this, SLOT(setLevelXray(int)));
+    //spin box de ratio de frames y factor de reduction
+    connect(this->ui->spinBoxRatioFrames, SIGNAL(valueChanged(double)), this, SLOT(setRatFramesXray(double)));
+    connect(this->ui->spinBoxFactorRed, SIGNAL(valueChanged(double)), this, SLOT(setFactRedXray(double)));
+    //botones de opacidad y encendido del clip
     connect(this->ui->butApplyOpacity, SIGNAL(clicked()), this, SLOT(applyOpacityValues()));
     connect(this->ui->checkbox_clip, SIGNAL(clicked(bool)), this, SLOT(evalClip(bool)));
-
     //test con probefilter
     connect(this->ui->butDic, SIGNAL(clicked()), this, SLOT(loadProbeFilter()));
-
-    //get binary mask from volumen usign mesh
-    connect(this->ui->butGetBinMas, SIGNAL(clicked()),this, SLOT(getBinMask()));
+    //save image virtual xray
+    connect(this->ui->butSaveVirtualXray, SIGNAL(clicked()), this, SLOT(saveVirtualXray()));
 
 }
 
@@ -240,11 +238,14 @@ void Create3DBones::reproyeccion(){
     Grafo *grafDelaunay = miDelaunay.getGrafoDelaunay();
     //grafDelaunay->printDataGrafo();
     grafDelaunay->doTriangBase();
-    grafDelaunay->printDataGrafo();
+    //grafDelaunay->printDataGrafo();
     //grafDelaunay->drawGrafo(getRenderWindow(this->ui->qvtkWidgetDelaunay));
     grafDelaunay->mergeGrafo();
     grafDelaunay->genNuevoIdsGraphGen();
-    grafDelaunay->drawGrafo(getRenderWindow(this->ui->qvtkWidgetDelaunay));
+    QVTKWidget *w = this->ui->qvtkWidget_4;
+    vtkSmartPointer<vtkRenderWindow> f = w->GetRenderWindow();
+    //grafDelaunay->drawGrafo(f);
+    //grafDelaunay->drawGrafo(getRenderWindow(this->ui->qvtkWidgetSilueta));
     //reproyeccionMalla();
 }
 
@@ -371,7 +372,9 @@ void Create3DBones::ejec_proyeccionGrid(){
     renderer->AddActor(actor2);
 
     // VTK/Qt wedded
-    this->ui->qvtkWidgetProyeccion->GetRenderWindow()->AddRenderer(renderer);
+    QVTKWidget *w = this->ui->qvtkWidgetProyeccion;
+    vtkSmartPointer<vtkRenderWindow> f = w->GetRenderWindow();
+    f->AddRenderer(renderer);
 }
 
 
@@ -693,7 +696,7 @@ void Create3DBones::cargarModelo(std::string filename, std::string filetype){
 
     vtkSmartPointer<vtkOBJReader> readerObj = vtkSmartPointer<vtkOBJReader>::New();
     vtkPolyDataReader* readerVtk = vtkPolyDataReader::New();
-    vtkMetaImageReader * readerimagemha = vtkMetaImageReader::New();
+
     //Conseguiendo puntos del modelo
     vtkSmartPointer<vtkPolyData> polydata =  vtkSmartPointer<vtkPolyData>::New();
 
@@ -703,13 +706,10 @@ void Create3DBones::cargarModelo(std::string filename, std::string filetype){
         polydata->ShallowCopy(readerObj->GetOutput());
 
     }else if(filetype.compare("vtk")==0){
+
         readerVtk->SetFileName(filename.c_str());
         readerVtk->Update();
         polydata->ShallowCopy(readerVtk->GetOutput());
-    }else if(filetype.compare("mha")==0){
-        readerimagemha->SetFileName(filename.c_str());
-        readerimagemha->Update();
-        polydata->ShallowCopy(readerimagemha->GetOutput());
     }
 
     //Pasando puntos de malla a matriz general
@@ -963,26 +963,14 @@ void Create3DBones::cargar3Dimage(std::string filename){
 }
 
 void Create3DBones::load_3dimage(){
-
-    QString fileName = QFileDialog::getOpenFileName(this,tr("Open Model"), "/home", tr("Model Files (*.vtk *.mha )"));
-    QFileInfo fi(fileName);
-    QString ext = fi.suffix();
-    std::cout<<ext.toStdString();
+    //cargamos el dicom
+    QString fileName = QFileDialog::getExistingDirectory(this, tr("Abrir Directorio"),"/home", QFileDialog::ShowDirsOnly| QFileDialog::DontResolveSymlinks);
     if (!fileName.isEmpty()) {
         cargar3Dimage(fileName.toStdString());
     }else if (fileName.isEmpty()) {
         QMessageBox::information(this, tr("Model Viewer"), tr("No puede cargar el modelos %1.").arg(fileName));
         return;
     }
-
-    //cargamos el dicom
-    /*QString fileName = QFileDialog::getExistingDirectory(this, tr("Abrir Directorio"),"/home", QFileDialog::ShowDirsOnly| QFileDialog::DontResolveSymlinks);
-    if (!fileName.isEmpty()) {
-        cargar3Dimage(fileName.toStdString());
-    }else if (fileName.isEmpty()) {
-        QMessageBox::information(this, tr("Model Viewer"), tr("No puede cargar el modelos %1.").arg(fileName));
-        return;
-    }*/
 
 }
 
@@ -1062,8 +1050,8 @@ void Create3DBones::loadProbeFilter(){
     // Clip the isosurface with a sphere
     vtkSmartPointer<vtkClipDataSet> skinClip =
             vtkSmartPointer<vtkClipDataSet>::New();
-    //skinClip->SetInputConnection(skinExtractor->GetOutputPort()); //STRUCTURE WILL BE CLIPED
-    skinClip->SetInputConnection(readerVtk->GetOutputPort());
+    skinClip->SetInputConnection(skinExtractor->GetOutputPort()); //STRUCTURE WILL BE CLIPED
+    //skinClip->SetInputConnection(readerVtk->GetOutputPort());
     skinClip->SetClipFunction(clipFunction);// FORM OF THE CLIP (SPHERE)
     skinClip->SetValue(0);
     skinClip->GenerateClipScalarsOn();
@@ -1098,8 +1086,8 @@ void Create3DBones::loadProbeFilter(){
     // Sample the input volume with the lens model geometry
     vtkSmartPointer<vtkProbeFilter> lensProbe =
             vtkSmartPointer<vtkProbeFilter>::New();
-    //lensProbe->SetInputConnection(lensModel->GetOutputPort()); //ESTRUCTURA A INTEPORLAR SPHERESOURCE
-    lensProbe->SetInputConnection(readerVtk->GetOutputPort());
+    lensProbe->SetInputConnection(lensModel->GetOutputPort()); //ESTRUCTURA A INTEPORLAR SPHERESOURCE
+    //lensProbe->SetInputConnection(readerVtk->GetOutputPort());
     lensProbe->SetSourceConnection(dicomReader->GetOutputPort()); //DICOM SOURCE INTENSITY
 
     // Clip the lens data with the isosurface value
@@ -1174,10 +1162,7 @@ void Create3DBones::loadProbeFilter(){
     // clips out objects behind the plane. This way only what is drawn
     // between the planes is actually rendered.
     aRenderer->ResetCameraClippingRange ();
-
-
 }
-
 
 void Create3DBones::setRatFramesXray(double ratFrames){
     simXray->setRatFrames(ratFrames);
@@ -1202,97 +1187,3 @@ void Create3DBones::saveVirtualXray(){
     Msgbox.setText("Se guardo la imagen exitosamente");
     Msgbox.exec();
 }
-
-int Create3DBones::getBinMask(){
-    cout<<"Binary Mask"<<endl;
-
-    //const char * inputImageName   = "/home/cris/Escritorio/MHAVolumeVisibleHuman/volOriBase.mha";
-    const char * inputImageName   = "/home/cris/Escritorio/pelvisFull.mha";
-    //const char * inputMeshName    = "/home/cris/Escritorio/MHAVolumeVisibleHuman/pelvisFemIzq.vtk";
-    const char * inputMeshName    = "/home/cris/Escritorio/MHAVolumeVisibleHuman/pelvisFemIzqSeg.obj";
-    //const char * inputMeshName    = "/home/cris/Documentos/PelvisFem.vtk";
-    //const char * inputImageName   = "/home/cris/Escritorio/MHAVolumeVisibleHuman/HeadMRVolume.mha";
-    //const char * inputMeshName    = "/home/cris/Escritorio/MHAVolumeVisibleHuman/torus.vtk";
-    const char * outputImageName  = "/home/cris/Escritorio/MHAVolumeVisibleHuman/volumeBinFinal.mha"    ;
-
-    const unsigned int Dimension = 3;
-    typedef double MeshPixelType;
-
-    vtkSmartPointer<vtkMetaImageReader> readerVtk = vtkSmartPointer<vtkMetaImageReader>::New();
-
-    //vtkPolyDataReader* readerVtk = vtkPolyDataReader::New();
-    //Conseguiendo puntos del modelo
-    vtkSmartPointer<vtkPolyData> polydata =  vtkSmartPointer<vtkPolyData>::New();
-
-    readerVtk->SetFileName(inputImageName);
-
-    readerVtk->Update();
-    polydata->ShallowCopy(readerVtk->GetOutput());
-
-    //Visualizando
-    vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    mapper->SetInputConnection(readerVtk->GetOutputPort());
-
-    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
-    actor->SetMapper(mapper);
-
-    vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
-    renderer->AddActor(actor);
-
-    // VTK/Qt wedded
-    this->ui->qvtkWidget_2->GetRenderWindow()->AddRenderer(renderer);
-
-    typedef itk::Mesh< MeshPixelType, Dimension > MeshType;
-
-    typedef itk::MeshFileReader< MeshType >  MeshReaderType;
-    MeshReaderType::Pointer meshReader = MeshReaderType::New();
-    meshReader->SetFileName( inputMeshName );
-
-    typedef unsigned char                           InputPixelType;
-    typedef itk::Image< InputPixelType, Dimension > InputImageType;
-    typedef itk::ImageFileReader< InputImageType >  ImageReaderType;
-
-    ImageReaderType::Pointer imageReader = ImageReaderType::New();
-    imageReader->SetFileName( inputImageName );
-
-    typedef unsigned char                             OutputPixelType;
-    typedef itk::Image< OutputPixelType, Dimension >  OutputImageType;
-
-    typedef itk::CastImageFilter< InputImageType, OutputImageType > CastFilterType;
-    CastFilterType::Pointer cast = CastFilterType::New();
-    cast->SetInput( imageReader->GetOutput() );
-
-    typedef itk::TriangleMeshToBinaryImageFilter< MeshType, OutputImageType > FilterType;
-    FilterType::Pointer filter = FilterType::New();
-    filter->SetInput( meshReader->GetOutput() );
-    filter->SetInfoImage( cast->GetOutput() );
-    filter->SetInsideValue( itk::NumericTraits< OutputPixelType >::max() );
-    try
-    {
-        filter->Update();
-    }
-    catch( itk::ExceptionObject & error )
-    {
-        std::cerr << "Error: " << error << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    typedef itk::ImageFileWriter< OutputImageType > WriterType;
-    WriterType::Pointer writer = WriterType::New();
-    writer->SetFileName( outputImageName );
-    writer->SetInput( filter->GetOutput() );
-    try
-    {
-        writer->Update();
-    }
-    catch( itk::ExceptionObject & error )
-    {
-        std::cerr << "Error: " << error << std::endl;
-        return EXIT_FAILURE;
-    }
-
-
-    return EXIT_SUCCESS;
-
-}
-

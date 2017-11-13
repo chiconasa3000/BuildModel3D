@@ -16,8 +16,8 @@ set(DELAUNAY_CPP ${D_DIR}/arista.cpp ${D_DIR}/grafo.cpp ${D_DIR}/subgrafo.cpp ${
 include_directories( ${D_DIR} )
 
 #Archivos ITK
-#find_package(ITK REQUIRED)
-#include(${ITK_USE_FILE})
+find_package(ITK REQUIRED)
+include(${ITK_USE_FILE})
 
 #Archivos VTK
 find_package(VTK REQUIRED)

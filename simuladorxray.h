@@ -2,6 +2,7 @@
 #define SIMULADORXRAY_H
 
 #include "vtkDICOMImageReader.h"
+#include <vtkMetaImageReader.h>
 #include "vtkSmartVolumeMapper.h"
 
 #include "vtkVolume.h"
@@ -37,6 +38,7 @@ private:
     //QStringList *listTypesBlend;
     string pathDirectory;
     vtkDICOMImageReader* readerimage;
+    vtkMetaImageReader * readerimagemha;
     //vtkPolyDataMapper *mapper;
     vtkRenderer *renderer;
     vtkRenderWindow *renWin;
@@ -54,6 +56,7 @@ private:
     int opacityWindow = 4096;
     int opacityLevel = 2048;
     double reductionFactor = 0.5;
+    double ratioFrames = 10.0;
     QString *typeBlend = new QString("MIP");
     int dim[3]; //dimensiones
     double bounds[6]; //limites
@@ -81,8 +84,11 @@ public:
 
     void setOpacityWindow(int opacWindow);
     void setOpacityLevel(int opacLevel);
+    void setFactReduction(double facRed);
+    void setRatFrames(double ratFra);
     void updateMapper();
     void setFlagClip(bool value);
+    vtkRenderWindow * getRenderWindowSimXray();
 };
 
 #endif // SIMULADORXRAY_H

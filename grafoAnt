@@ -1,0 +1,106 @@
+
+void Grafo::mergeGrafo(){
+    //for the moment it read only the first subgraph
+    //solo se lee el un solo grafo el 1ero siempre quedara fija
+    //al realizar el merge
+
+
+    for(int itEvalNext = 1; itEvalNext < 2; itEvalNext++){
+
+        SubGrafo *s1 = &group_subgrafos[itEvalNext - 1];
+        //este subgrafo es el que cambiara constantemente
+        SubGrafo *s2 = &group_subgrafos[itEvalNext];
+
+
+        //al ser una nueva evaluacion se debe establecer la linea base
+        //get the less point in every subgraph
+        //capturamos el menor punto en y de cada subgrafo
+        s1->calcMenorPointInYcoord();
+        s2->calcMenorPointInYcoord();
+
+        //establecemos la linea base para ambos subgrafos
+        Arista *lineaBase = doLineaBase(s1,s2);
+
+        //las banderas tambien se ponen otra vez a su estado inicial
+        bool esSubIzq = false;
+        bool endMerge = false;
+        //insert the new points in every subgraph
+        //insertamos los nuevos puntos sobre cada subgrafo
+        //they will be read or searching during the candidate test
+        //estos seran leidos o consultados durante la prueba de candidatos
+        //but they must not being read by in traversing subgraph
+        //pero no deberan ser recorridos es decir no iterar el subgrafo
+        //del inicio al final
+
+        //en cada nueva evaluacion
+        s1->insertPointsTemp(s2,true);
+        s2->insertPointsTemp(s1,false);
+
+        //for(int i=1; i<group_subgrafos.size(); i++){
+
+        //at first it inserts base line like new edge
+        //inicialmente se inserta la linea base como nueva arista
+        //in every iteration a new baseline will be finding
+        //en las iteracion la linea base sera encontrada insertada y actualzada
+
+        //insert a the first bsae line
+        //insertar la linea base //esto solo se hace una vez
+        s1->insertArista(lineaBase->getIdOrigen(),lineaBase->getIdDestino());
+        s2->insertArista(lineaBase->getIdDestino(),lineaBase->getIdOrigen());
+
+        int cont = 1;
+        while(!endMerge){
+            if(cont == 4){
+                cout<<"hola";
+            }
+            //save candidate for both subgraphs
+            //guarda los candidatos para ambos subgrafos
+            saveCandidatos(lineaBase,s1,s2);
+
+            //get candidates
+            //obtenemos los candidatos
+            vector<Arista> listCandS1 = s1->getListArisCand();
+            vector<Arista> listCandS2 = s2->getListArisCand();
+
+            //get the final candidate for both subgraph
+            //Obteniendo el punto final candidato de ambos subgrafos
+            Punto ptoFinalCand = testCandidatos(s1,s2,listCandS1,listCandS2,lineaBase,esSubIzq,endMerge);
+
+            //guardamos los ides de las nuevas aristas y actualizamos la linea base
+            //saveIdPairCand(ptoFinalCand, lineaBase, idesPairCandL,idesPairCandR,esSubIzq);
+
+            int difPuntosS1 = s1->getNroPtos();
+            int difPuntosS2 = s2->getNroPtos();
+
+            //evaluamos siempre la bandera de finalizacion
+            if(!endMerge){
+                //insert a new edge which contains candidate point and point from line base
+                //insertamos la arista que contiene el punto candidato y un punto de la linea base
+                if(esSubIzq){
+                    s1->insertArista(ptoFinalCand.getIdVert(),lineaBase->getIdDestino());
+                    s1->insertArista(lineaBase->getIdDestino(),ptoFinalCand.getIdVert());
+                    s2->insertArista(lineaBase->getIdDestino(),ptoFinalCand.getIdVert());
+                    //updating the base line
+                    //actualizamos la linea base
+                    lineaBase->setPtoOrigen(ptoFinalCand);
+                    lineaBase->setIdOrigen(ptoFinalCand.getIdVert());
+                }else{
+                    s2->insertArista(ptoFinalCand.getIdVert(),lineaBase->getIdOrigen());
+                    s2->insertArista(lineaBase->getIdOrigen(),ptoFinalCand.getIdVert());
+                    s1->insertArista(lineaBase->getIdOrigen(),ptoFinalCand.getIdVert());
+                    //updating the base line
+                    //actualizamos la linea base
+                    lineaBase->setPtoDestino(ptoFinalCand);
+                    lineaBase->setIdDestino(ptoFinalCand.getIdVert());
+                }
+                cont++;
+            }else{
+                //eliminar el subgrafo 2 y pasar de la lista los 2 subgrafos siguientes
+                //recorriendo todos los subgrafos restantes a la izquierda
+                group_subgrafos.erase(group_subgrafos.begin() + itEvalNext);
+                //crece el indice de cada uno
+                break;
+            }
+        }
+    }
+}

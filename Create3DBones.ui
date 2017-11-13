@@ -18,11 +18,11 @@
     <item>
      <widget class="QTabWidget" name="renderTab">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
-        <string>GenerateDRR</string>
+        <string>X ray Simulation</string>
        </attribute>
        <widget class="QSplitter" name="splitter">
         <property name="geometry">
@@ -46,16 +46,9 @@
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label_9">
+           <widget class="QPushButton" name="butSaveVirtualXray">
             <property name="text">
-             <string>Ruta del Archivo</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="textInput_pathFile">
-            <property name="enabled">
-             <bool>false</bool>
+             <string>Save Image</string>
             </property>
            </widget>
           </item>
@@ -101,7 +94,7 @@
                 <item>
                  <widget class="QLabel" name="label_10">
                   <property name="text">
-                   <string>Tipo de Blend:</string>
+                   <string>Type of Blend:</string>
                   </property>
                  </widget>
                 </item>
@@ -125,7 +118,7 @@
                 <item>
                  <widget class="QCheckBox" name="checkBox">
                   <property name="text">
-                   <string>Comp Dependientes</string>
+                   <string>Dependent Components</string>
                   </property>
                  </widget>
                 </item>
@@ -151,7 +144,7 @@
                   <item>
                    <widget class="QLabel" name="label">
                     <property name="text">
-                     <string>Factor de Reduccion</string>
+                     <string>Reduction Factor</string>
                     </property>
                    </widget>
                   </item>
@@ -170,8 +163,14 @@
                   </item>
                   <item>
                    <widget class="QDoubleSpinBox" name="spinBoxFactorRed">
-                    <property name="value">
+                    <property name="maximum">
                      <double>1.000000000000000</double>
+                    </property>
+                    <property name="singleStep">
+                     <double>0.100000000000000</double>
+                    </property>
+                    <property name="value">
+                     <double>0.500000000000000</double>
                     </property>
                    </widget>
                   </item>
@@ -182,7 +181,7 @@
                   <item>
                    <widget class="QLabel" name="label_2">
                     <property name="text">
-                     <string>Ratio de Frames</string>
+                     <string>Frames Ratio</string>
                     </property>
                    </widget>
                   </item>
@@ -201,8 +200,14 @@
                   </item>
                   <item>
                    <widget class="QDoubleSpinBox" name="spinBoxRatioFrames">
+                    <property name="minimum">
+                     <double>0.010000000000000</double>
+                    </property>
+                    <property name="maximum">
+                     <double>60.000000000000000</double>
+                    </property>
                     <property name="value">
-                     <double>1.000000000000000</double>
+                     <double>10.000000000000000</double>
                     </property>
                    </widget>
                   </item>
@@ -228,7 +233,7 @@
                     <item>
                      <widget class="QLabel" name="label_3">
                       <property name="text">
-                       <string>Transformacion Rotacion</string>
+                       <string>Rotation Transform</string>
                       </property>
                      </widget>
                     </item>
@@ -237,21 +242,21 @@
                       <item>
                        <widget class="QLabel" name="label_6">
                         <property name="text">
-                         <string>eje X</string>
+                         <string>axis X</string>
                         </property>
                        </widget>
                       </item>
                       <item>
                        <widget class="QLabel" name="label_7">
                         <property name="text">
-                         <string>eje Y</string>
+                         <string>axis Y</string>
                         </property>
                        </widget>
                       </item>
                       <item>
                        <widget class="QLabel" name="label_8">
                         <property name="text">
-                         <string>eje Z</string>
+                         <string>axis Z</string>
                         </property>
                        </widget>
                       </item>
@@ -287,7 +292,7 @@
                   <item>
                    <widget class="QPushButton" name="but_trans_xray">
                     <property name="text">
-                     <string>AplicarTrans</string>
+                     <string>Apply Trans</string>
                     </property>
                    </widget>
                   </item>
@@ -317,7 +322,7 @@
                     <item>
                      <widget class="QLabel" name="label_5">
                       <property name="text">
-                       <string>Opacidad del Nivel</string>
+                       <string>Level Opacity</string>
                       </property>
                      </widget>
                     </item>
@@ -351,7 +356,7 @@
                     <item>
                      <widget class="QLabel" name="label_4">
                       <property name="text">
-                       <string>Opacidad de la Ventana</string>
+                       <string>Window Opacity</string>
                       </property>
                      </widget>
                     </item>
@@ -385,7 +390,7 @@
                 <item>
                  <widget class="QPushButton" name="butApplyOpacity">
                   <property name="text">
-                   <string>AplicarOpacity</string>
+                   <string>Apply Opacity</string>
                   </property>
                  </widget>
                 </item>
@@ -430,7 +435,7 @@
              </size>
             </property>
             <property name="title">
-             <string>GroupBox</string>
+             <string>Render</string>
             </property>
             <widget class="QVTKWidget" name="qvtkWidget_3" native="true">
              <property name="geometry">
@@ -452,64 +457,12 @@
        <attribute name="title">
         <string>3D-Model</string>
        </attribute>
-       <widget class="QPushButton" name="butDic">
-        <property name="geometry">
-         <rect>
-          <x>170</x>
-          <y>10</y>
-          <width>89</width>
-          <height>25</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>loadDicom</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="butVtk">
-        <property name="geometry">
-         <rect>
-          <x>360</x>
-          <y>10</y>
-          <width>89</width>
-          <height>25</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>loadVtk</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_11">
-        <property name="geometry">
-         <rect>
-          <x>270</x>
-          <y>10</y>
-          <width>67</width>
-          <height>17</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>TextLabel</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_12">
-        <property name="geometry">
-         <rect>
-          <x>460</x>
-          <y>10</y>
-          <width>67</width>
-          <height>17</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>TextLabel</string>
-        </property>
-       </widget>
        <widget class="QWidget" name="layoutWidget">
         <property name="geometry">
          <rect>
-          <x>9</x>
-          <y>9</y>
-          <width>136</width>
+          <x>10</x>
+          <y>60</y>
+          <width>434</width>
           <height>27</height>
          </rect>
         </property>
@@ -517,7 +470,7 @@
          <item>
           <widget class="QPushButton" name="but_load_meanmd">
            <property name="text">
-            <string>Load Model</string>
+            <string>Load 3d model</string>
            </property>
           </widget>
          </item>
@@ -537,155 +490,216 @@
            </property>
           </spacer>
          </item>
+         <item>
+          <widget class="QPushButton" name="butDic">
+           <property name="text">
+            <string>ProbeFilter Clip Test</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_10">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="butGetBinMas">
+           <property name="text">
+            <string>GetBinaryMask</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
        <widget class="QGroupBox" name="groupBox_2">
         <property name="geometry">
          <rect>
-          <x>9</x>
-          <y>40</y>
-          <width>581</width>
-          <height>661</height>
+          <x>10</x>
+          <y>104</y>
+          <width>661</width>
+          <height>591</height>
          </rect>
         </property>
         <property name="title">
-         <string>Vista del Modelo del Modelo Promedio</string>
+         <string>3D Model View</string>
         </property>
-        <layout class="QHBoxLayout" name="horizontalLayout_4">
-         <item>
-          <widget class="QVTKWidget" name="qvtkWidget_2" native="true"/>
-         </item>
-        </layout>
+        <widget class="QVTKWidget" name="qvtkWidget_2" native="true">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>20</y>
+           <width>651</width>
+           <height>551</height>
+          </rect>
+         </property>
+        </widget>
        </widget>
       </widget>
       <widget class="QWidget" name="tab_2">
        <attribute name="title">
-        <string>Init-Model</string>
+        <string>Transform Model</string>
        </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_3">
-        <item>
-         <widget class="QSplitter" name="splitter_2">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <widget class="QWidget" name="layoutWidget">
-           <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <widget class="QGroupBox" name="groupBox_7">
+        <property name="geometry">
+         <rect>
+          <x>760</x>
+          <y>40</y>
+          <width>264</width>
+          <height>279</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>Model and Control Point Grid View</string>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_11">
+         <item>
+          <widget class="QVTKWidget" name="qvtkWidgetDelaunay" native="true">
+           <property name="autoFillBackground">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="layoutWidget">
+        <property name="geometry">
+         <rect>
+          <x>9</x>
+          <y>9</y>
+          <width>620</width>
+          <height>27</height>
+         </rect>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QPushButton" name="but_load_model">
+           <property name="text">
+            <string>3D Mesh and Cube</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="but_exe_pers">
+           <property name="text">
+            <string>Mesh Projection</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="but_silueta">
+           <property name="text">
+            <string>Mesh and Cube Projection</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="but_delaunay">
+           <property name="text">
+            <string>Back Projection</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Preferred</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="layoutWidget">
+        <property name="geometry">
+         <rect>
+          <x>9</x>
+          <y>40</y>
+          <width>741</width>
+          <height>281</height>
+         </rect>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_12">
+         <item>
+          <widget class="QGroupBox" name="groupBox">
+           <property name="title">
+            <string>Model and Control Point Grid View</string>
+           </property>
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
             <item>
-             <widget class="QPushButton" name="but_load_model">
-              <property name="text">
-               <string>Malla y Cubo 3D</string>
+             <widget class="QVTKWidget" name="qvtkWidget" native="true">
+              <property name="autoFillBackground">
+               <bool>false</bool>
               </property>
              </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="but_exe_pers">
-              <property name="text">
-               <string>Proyeccion de Malla</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="but_silueta">
-              <property name="text">
-               <string>Proyeccion Malla y Cubo</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="but_delaunay">
-              <property name="text">
-               <string>Reproyeccion</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeType">
-               <enum>QSizePolicy::Preferred</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="layoutWidget">
-           <layout class="QHBoxLayout" name="horizontalLayout_12">
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBox_3">
+           <property name="title">
+            <string>Silhouette and Control Points Projection</string>
+           </property>
+           <layout class="QHBoxLayout" name="horizontalLayout_5">
             <item>
-             <widget class="QGroupBox" name="groupBox">
-              <property name="title">
-               <string>Vista del Modelo y Grilla de Puntos de Control</string>
+             <widget class="QVTKWidget" name="qvtkWidgetProyeccion" native="true">
+              <property name="autoFillBackground">
+               <bool>false</bool>
               </property>
-              <layout class="QHBoxLayout" name="horizontalLayout_3">
-               <item>
-                <widget class="QVTKWidget" name="qvtkWidget" native="true">
-                 <property name="autoFillBackground">
-                  <bool>false</bool>
-                 </property>
-                </widget>
-               </item>
-              </layout>
+              <property name="styleSheet">
+               <string notr="true"/>
+              </property>
              </widget>
             </item>
-            <item>
-             <widget class="QGroupBox" name="groupBox_3">
-              <property name="title">
-               <string>Proyeccion SIlueta y Puntos de Control</string>
-              </property>
-              <layout class="QHBoxLayout" name="horizontalLayout_5">
-               <item>
-                <widget class="QVTKWidget" name="qvtkWidgetProyeccion" native="true">
-                 <property name="autoFillBackground">
-                  <bool>false</bool>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true"/>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </item>
-            <item>
-             <layout class="QVBoxLayout" name="verticalLayout_2">
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_2">
+           <item>
+            <widget class="QGroupBox" name="groupBox_4">
+             <property name="title">
+              <string>Cube Projection</string>
+             </property>
+             <layout class="QHBoxLayout" name="horizontalLayout_6">
               <item>
-               <widget class="QGroupBox" name="groupBox_4">
-                <property name="title">
-                 <string>Reproyeccion del Cubo</string>
-                </property>
-                <layout class="QHBoxLayout" name="horizontalLayout_6">
-                 <item>
-                  <widget class="QVTKWidget" name="qvtkWidgetDelaunay" native="true"/>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-              <item>
-               <widget class="QGroupBox" name="groupBox_5">
-                <property name="title">
-                 <string>Reproyeccion de Contorno</string>
-                </property>
-                <layout class="QHBoxLayout" name="horizontalLayout_7">
-                 <item>
-                  <widget class="QVTKWidget" name="qvtkWidgetSilueta" native="true"/>
-                 </item>
-                </layout>
-               </widget>
+               <widget class="QVTKWidget" name="qvtkWidgetD" native="true"/>
               </item>
              </layout>
-            </item>
-           </layout>
-          </widget>
-         </widget>
-        </item>
-       </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="groupBox_5">
+             <property name="title">
+              <string>Contour Projection</string>
+             </property>
+             <layout class="QHBoxLayout" name="horizontalLayout_7">
+              <item>
+               <widget class="QVTKWidget" name="qvtkWidgetSilueta" native="true"/>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
       </widget>
       <widget class="QWidget" name="tab_1">
        <attribute name="title">
@@ -704,7 +718,7 @@
           <item>
            <widget class="QPushButton" name="but_find_cont">
             <property name="text">
-             <string>EncontrarContorno</string>
+             <string>Find Contour</string>
             </property>
            </widget>
           </item>
@@ -731,7 +745,7 @@
           <item>
            <widget class="QGroupBox" name="box_image">
             <property name="title">
-             <string>Imagen de Ingreso:</string>
+             <string>Input x-ray Image</string>
             </property>
            </widget>
           </item>
@@ -776,7 +790,7 @@
   <customwidget>
    <class>QVTKWidget</class>
    <extends>QWidget</extends>
-   <header>QVTKWidget.h</header>
+   <header location="global">QVTKWidget.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

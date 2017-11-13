@@ -60,6 +60,7 @@ public:
     vector<Punto>* getRefGroupPuntos();
     vector<Arista> getListArisCand();
     int getNroPtos();
+    int getNroPtosReal();
     void setNroPtos(int nroPtos);
     //    bool doFirstCond();
     //    void anguloEnAristas(int idAristaA, int idAristaB);

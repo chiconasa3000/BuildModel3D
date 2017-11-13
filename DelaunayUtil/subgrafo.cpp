@@ -51,8 +51,12 @@ void SubGrafo::insertPunto(Punto &p){
 //servira para las consultas sobre ides del su subgrafo contrario
 //durante el proceso de merging
 void SubGrafo::insertPointsTemp(SubGrafo *sFuente,bool esSubIzq){
-
-    int nroPtosSfuente = sFuente->getNroPtos()+1;
+    //CORRECCION
+    //En vez de sumar la unidad o diferencia
+    //Solo le pasamos la cantidad de ptos que posee el subgrafo al que copiaremos
+    //los puntos del subgrafo fuente
+    //int nroPtosSfuente = sFuente->getNroPtos()+1;
+    int nroPtosSfuente = this->getNroPtos();
 
     if(esSubIzq){
         //en caso de ser subgrafo izquierdo la insercion es de manera
@@ -362,6 +366,10 @@ Punto SubGrafo::getMenorPtoy(){
 
 int SubGrafo::getNroPtos(){
     return nroPtos;
+}
+
+int SubGrafo::getNroPtosReal(){
+    return group_puntos.size();
 }
 
 void SubGrafo::setNroPtos(int nroPtos){

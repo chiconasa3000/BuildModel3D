@@ -32,14 +32,6 @@ bool UtilMaths::orderCounterClockwise(Punto *p1,Punto *p2,Punto *p3){
 bool UtilMaths::testBelongCirc(Arista *base, Punto candAct, Punto candNext){
     Punto po = base->getPtoOrigen(); //P
     Punto pd = base->getPtoDestino(); //Q
-    bool a1 = candAct.getX()==4;
-    bool a2 = candAct.getY()==0;
-    bool b1 = candNext.getX()==4;
-    bool b2 = candNext.getY()==0;
-
-    if(a1 && a2 && b1 && b2){
-        std::cout<<"hola christian";
-    }
 
     //mpq = [(P(1)+Q(1))/2 (P(2)+Q(2))/2];
     vector<double> mpq(2);
@@ -59,6 +51,17 @@ bool UtilMaths::testBelongCirc(Arista *base, Punto candAct, Punto candNext){
     //gqr = (R(2)-Q(2))/(R(1)-Q(1));
     double gqr = (candAct.getY() - pd.getY())/(candAct.getX()-pd.getX());
 
+    //actualizando cuando la grandiente escogida da cero al ser horizontal la linea
+    //por lo cual se escoge la otra recta pr
+    if(gpq == 0.0){
+        gpq = (candAct.getY() - po.getY())/(candAct.getX()-po.getX());
+        mpqx =(po.getX() + candAct.getX())/2;
+        mpqy =(po.getY() + candAct.getY())/2;
+        mpq={mpqx,mpqy};
+    }else if(gqr==0.0){
+        gqr = (candAct.getY() - po.getY())/(candAct.getX()-po.getX());
+    }
+
     //gl1 = -(gpq^-1);
     double gl1 = -pow(gpq,-1);
     //gl2 = -(gqr^-1);
@@ -69,26 +72,26 @@ bool UtilMaths::testBelongCirc(Arista *base, Punto candAct, Punto candNext){
 
     A << -gl1,1,-gl2,1;
     b << mpq[1] - gl1*(mpq[0]), mqr[1]-gl2*(mqr[0]);
-    cout << "Here is the matrix A:\n" << A << endl;
-    cout << "Here is the vector b:\n" << b << endl;
+    //cout << "Here is the matrix A:\n" << A << endl;
+    //cout << "Here is the vector b:\n" << b << endl;
     Vector2f x = A.colPivHouseholderQr().solve(b);
-    cout << "The solution is:\n" << x << endl;
+    //cout << "The solution is:\n" << x << endl;
 
     //radio de la circunferencia
     //dpc = sqrt((P(1)-C(1))^2 + (P(2)-C(2))^2);
     double dpc = pow(po.getX()-x(0),2) + pow(po.getY()-x(1),2);
     double ndpc;
-    dpc *= 100000.0;
+    dpc *= 10000.0;
     modf(dpc, &ndpc);
-    ndpc /= 100000.0;
+    ndpc /= 10000.0;
 
 
     //probar ahora el punto
     double testRad = pow(candNext.getX()-x(0),2) + pow(candNext.getY()-x(1),2);
     double ntestRad;
-    testRad *= 100000.0;
+    testRad *= 10000.0;
     modf(testRad, &ntestRad);
-    ntestRad /= 100000.0;
+    ntestRad /= 10000.0;
 
     if(ntestRad == ndpc){
         //el punto esta en el borde de la circuferencia

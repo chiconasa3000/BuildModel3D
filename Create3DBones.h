@@ -107,9 +107,13 @@ private slots:
   void applyTransSimulXray();
   void setLevelXray(int);
   void setWindowXray(int);
+  void setRatFramesXray(double);
+  void setFactRedXray(double);
   void applyOpacityValues();
   void evalClip(bool valClip);
-  void loadDic();
+  void loadProbeFilter();
+  void saveVirtualXray();
+  int getBinMask();
 
   //slots de imagenes
   void open();

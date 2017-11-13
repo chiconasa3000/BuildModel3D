@@ -1,73 +1,6 @@
 #include "simuladorxray.h"
 #include "vtkDICOMImageReader.h"
 
-
-//CLASE PARA LA INTERACCION DE TECLADO
-class KeyPressInteractorStyle : public vtkInteractorStyleTrackballCamera
-{
-public:
-
-    //constructor
-    static KeyPressInteractorStyle* New();
-    vtkTypeMacro(KeyPressInteractorStyle, vtkInteractorStyleTrackballCamera);
-
-    /*KeyPressInteractorStyle()
-    {
-      this->SelectedMapper = vtkSmartPointer<vtkDataSetMapper>::New();
-      this->SelectedActor = vtkSmartPointer<vtkActor>::New();
-      this->SelectedActor->SetMapper(SelectedMapper);
-    }*/
-
-    virtual void OnKeyPress()
-    {
-        // Get the keypress
-        vtkRenderWindowInteractor *rwi = this->Interactor;
-        std::string key = rwi->GetKeySym();
-
-        // Handle an arrow key
-        if(key == "s")
-        {
-            std::cout << "Guardando Imagen en un archivo" << std::endl;
-            /* get image from render vtk*/
-            vtkWindowToImageFilter * windowToImageFilter = vtkWindowToImageFilter::New();
-            windowToImageFilter->SetInput(this->Interactor->GetRenderWindow());
-            windowToImageFilter->SetMagnification(3); //set the resolution of the output image (3 times the current resolution of vtk render window)
-            windowToImageFilter->SetInputBufferTypeToRGBA(); //also record the alpha (transparency) channel
-            windowToImageFilter->ReadFrontBufferOff(); // read from the back buffer
-            windowToImageFilter->Update();
-
-            vtkPNGWriter *writer = vtkPNGWriter::New();
-            writer->SetFileName("simulatedXray.png");
-            writer->SetInputConnection(windowToImageFilter->GetOutputPort());
-            writer->Write();
-        }
-
-        if(key == "c")
-        {
-
-            if(!myboxwidget->GetEnabled()){
-                myboxwidget->On();
-                std::cout << "Recorte de Volumen Encendido." << std::endl;
-            }else{
-                myboxwidget->Off();
-                std::cout << "Recorte de Volumen Apagado" << std::endl;
-            }
-
-        }
-
-        // Forward events
-        vtkInteractorStyleTrackballCamera::OnKeyPress();
-    }
-
-    void setBoxWidget(vtkBoxWidget  *bw){
-        myboxwidget = bw;
-    }
-private:
-    vtkBoxWidget *myboxwidget;
-
-};
-vtkStandardNewMacro(KeyPressInteractorStyle);
-
 // Callback for moving the planes from the box widget to the mapper
 class vtkBoxWidgetCallback : public vtkCommand
 {
@@ -100,6 +33,7 @@ SimuladorXray::SimuladorXray(vtkRenderWindow* renWin,vtkRenderWindowInteractor *
     //asignacion de memoria para el todos los controladores de visualizacion
 
     readerimage = vtkDICOMImageReader::New();
+    readerimagemha = vtkMetaImageReader::New();
     mapper = vtkSmartVolumeMapper::New();
     renderer = vtkRenderer::New();
     volume = vtkVolume::New();
@@ -115,18 +49,24 @@ SimuladorXray::SimuladorXray(vtkRenderWindow* renWin,vtkRenderWindowInteractor *
     this->renWin = renWin;
     this->iren = iren;
 
-    //iren->SetDesiredUpdateRate(60/ (1+0) );
-    //iren->GetInteractorStyle()->SetDefaultRenderer(renderer);
+    iren->SetDesiredUpdateRate(ratioFrames/ (1+clip) );
+    iren->GetInteractorStyle()->SetDefaultRenderer(renderer);
 }
 
 void SimuladorXray::setDirectory3Dimage(string namedirectory){
     this->pathDirectory = namedirectory;
-    readerimage->SetDirectoryName(namedirectory.c_str());
-    readerimage->Update();
+
+     readerimagemha->SetFileName(namedirectory.c_str());
+     readerimagemha->Update();
+    //readerimage->SetDirectoryName(namedirectory.c_str());
+    //readerimage->Update();
+     readerimagemha->Update();
     //actualizamos de paso el vtkimagedata y el vtkalgorithm
-    input=readerimage->GetOutput();
+    //input=readerimage->GetOutput();
+     input=readerimagemha->GetOutput();
     //actualizar vtkAlgorithm
-    reader=readerimage;
+    //reader=readerimage;
+     reader=readerimagemha;
     //Dimensiones del volumen
     input->GetDimensions(dim);
     if ( dim[0] < 2 || dim[1] < 2 || dim[2] < 2 ){
@@ -137,7 +77,7 @@ void SimuladorXray::setDirectory3Dimage(string namedirectory){
 
 void SimuladorXray::show(){
 
-    renWin->SetSize(600,600); // intentional odd and NPOT  width/heigh
+    renWin->SetSize(601,631); // intentional odd and NPOT  width/heigh
 
     //tranformando en rotacion al volumen
     //transformRotImageData(); //primero la tranformacion salida (reslice)
@@ -211,7 +151,7 @@ void SimuladorXray::transformRotImageData(double rotx,double roty,double rotz){
 
     //actualizamos el resample con este nuevo resultado del reslice
     //input = reslice->GetOutput();
-    //reader = reslice;
+    reader = reslice;
     //resample->SetInputConnection(reslice->GetOutputPort());
 
 
@@ -402,4 +342,26 @@ void SimuladorXray::setFlagClip(bool value){
     else
         box->Off();
 
+}
+
+void SimuladorXray::setFactReduction(double facRed){
+    //asignamos el valor actual de reduccion
+    reductionFactor = facRed;
+    resampleImageData();
+    //asignando al render la entrada de imagen 3D
+    mapper->SetInputConnection(resample->GetOutputPort());
+    mapper->Update();
+}
+
+void SimuladorXray::setRatFrames(double ratFra){
+
+    ratioFrames = ratFra;
+    iren->SetDesiredUpdateRate(ratioFrames/ (1+clip) );
+    iren->GetInteractorStyle()->SetDefaultRenderer(renderer);
+    mapper->Update();
+
+}
+
+vtkRenderWindow* SimuladorXray::getRenderWindowSimXray(){
+    return renWin;
 }
